@@ -81,6 +81,10 @@ node --check aistudio-claude-theme.user.js
 
 语法检查不代替真实页面的交互与视觉验证。
 
+## 社区认可
+
+认可并支持 [LINUX DO — 新的理想型社区](https://linux.do/)，感谢社区提供技术交流、经验分享与互助的平台。
+
 ## 许可与致谢
 
 [MIT](LICENSE)。默认设置脚本保留原有 `Antigravity` 作者标注。主题的暖纸配色参考了用户提供的个人 TeX 样式，仓库不分发该参考文件。
