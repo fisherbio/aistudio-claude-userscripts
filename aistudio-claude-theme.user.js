@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸主题
 // @namespace    local.aistudio.claude-theme
-// @version      1.2.6
+// @version      1.3.0
 // @description  Claude 风格的暖纸配色、居中首页和阅读排版；独立于模型默认设置脚本。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -42,7 +42,7 @@ html[data-claude-studio] :is(.ms-button-icon,.ms-button-borderless) { border-rad
 html[data-claude-studio] :is(.ms-button-icon,.ms-button-borderless):not([aria-disabled="true"]):hover { background:var(--cs-soft)!important; color:var(--cs-text)!important; }
 html[data-claude-studio] ms-prompt-box { display:block; background:#FFFEFB!important; border:1px solid var(--cs-border)!important; border-radius:20px!important; box-shadow:0 3px 16px #14141308,0 1px 3px #14141305!important; overflow:visible; }
 html[data-claude-studio] ms-prompt-box:focus-within { border-color:#B4AA99!important; box-shadow:0 3px 20px #1414130D!important; }
-html[data-claude-studio] ms-prompt-box textarea { background:transparent!important; color:var(--cs-text)!important; font:16px/1.65 var(--cs-ui)!important; caret-color:var(--cs-accent); }
+html[data-claude-studio] ms-prompt-box textarea { background:transparent!important; color:var(--cs-text)!important; font:16px/1.5 var(--cs-ui)!important; caret-color:var(--cs-accent); }
 html[data-claude-studio] ms-prompt-box textarea::placeholder { color:#8A8377!important; opacity:1; }
 html[data-claude-studio] ms-prompt-box button { font-size:12px!important; }
 html[data-claude-studio] :is(button[aria-label="Run"],ms-run-button button) { background:var(--cs-accent)!important; color:#fff!important; border-color:var(--cs-accent)!important; border-radius:11px!important; }
@@ -54,18 +54,27 @@ html[data-claude-studio] ms-run-settings :is(h2,h3) { color:var(--cs-text)!impor
 html[data-claude-studio] :is(.mat-mdc-menu-panel,.mat-mdc-select-panel,mat-dialog-container .mdc-dialog__surface) { background:var(--cs-bg)!important; color:var(--cs-text)!important; border:1px solid var(--cs-border)!important; border-radius:14px!important; }
 html[data-claude-studio] mat-option { color:var(--cs-text)!important; }
 html[data-claude-studio] mat-option:hover { background:var(--cs-soft)!important; }
-html[data-claude-studio] :is(ms-cmark-node,ms-text-chunk,.markdown) { color:var(--cs-text)!important; font:17px/1.8 var(--cs-reading)!important; }
-html[data-claude-studio] :is(ms-cmark-node,.markdown) :is(h1,h2,h3,h4) { font-family:var(--cs-reading)!important; color:var(--cs-text)!important; line-height:1.45; letter-spacing:-.02em; margin-top:1.5em; }
-html[data-claude-studio] :is(ms-cmark-node,.markdown) p { margin:.8em 0!important; }
+/* Set the reading scale once; inline cmark hosts inherit their semantic parent. */
+html[data-claude-studio] :is(ms-text-chunk,.markdown) { color:var(--cs-text)!important; font:16px/1.5 var(--cs-reading)!important; }
+html[data-claude-studio] ms-cmark-node { color:inherit!important; font-family:inherit!important; font-size:inherit!important; line-height:inherit!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) :is(p,ul,ol,li,blockquote,th,td) { font-family:inherit!important; font-size:inherit!important; line-height:inherit!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) :is(h1,h2,h3,h4) { font-family:var(--cs-reading)!important; color:var(--cs-text)!important; font-weight:600; line-height:1.4!important; letter-spacing:-.02em; margin:1.1em 0 .45em!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) h1 { font-size:1.5em!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) h2 { font-size:1.25em!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) h3 { font-size:1.125em!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) h4 { font-size:1em!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) p { margin:0 0 10px!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) :is(ul,ol) { margin:6px 0 10px!important; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) li { margin:3px 0!important; }
 html[data-claude-studio] :is(ms-cmark-node,.markdown) a { color:var(--cs-accent)!important; text-decoration-color:#BF624366; text-underline-offset:3px; }
 html[data-claude-studio] :is(ms-cmark-node,.markdown) :not(pre)>code { color:var(--cs-code)!important; background:var(--cs-code-bg)!important; border-radius:4px; padding:2px 5px; }
 html[data-claude-studio] :is(pre,code,.cm-editor,.monaco-editor) { font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace!important; }
 html[data-claude-studio] :is(ms-cmark-node,.markdown) pre { background:var(--cs-code-bg)!important; border:1px solid var(--cs-border)!important; border-radius:12px; padding:16px; }
-html[data-claude-studio] :is(ms-cmark-node,.markdown) table { border-collapse:collapse; width:100%; font-size:.92em; }
+html[data-claude-studio] :is(ms-cmark-node,.markdown) table { border-collapse:collapse; width:100%; font-size:14px!important; line-height:1.5!important; }
 html[data-claude-studio] :is(ms-cmark-node,.markdown) :is(th,td) { border-color:var(--cs-border)!important; padding:10px 13px; }
 html[data-claude-studio] :is(ms-cmark-node,.markdown) th { background:var(--cs-surface)!important; }
 html[data-claude-studio] :is(ms-cmark-node,.markdown) blockquote { border-left:3px solid var(--cs-border); color:var(--cs-muted); padding-left:18px; }
-html[data-claude-studio] .chat-view-container:not(.zero-state) { max-width:820px!important; width:100%; margin-inline:auto!important; }
+html[data-claude-studio] .chat-view-container:not(.zero-state) { max-width:760px!important; width:100%; margin-inline:auto!important; }
 html[data-claude-studio] .chunk-editor-main>footer { max-width:760px!important; width:calc(100% - 48px)!important; margin-inline:auto!important; padding-bottom:18px!important; }
 html[data-claude-studio][data-cs-home] .chunk-editor-main { position:relative; justify-content:center!important; padding-bottom:12vh!important; }
 html[data-claude-studio][data-cs-home] ms-playground-toolbar { position:absolute!important; inset:0 0 auto 0; z-index:2; }
@@ -87,7 +96,7 @@ html[data-claude-studio] ms-prompt-box { background:transparent!important; borde
 html[data-claude-studio] ms-prompt-box .prompt-box-container { margin:0!important; padding:16px!important; background:#FFFEFB!important; border:1px solid var(--cs-border)!important; border-radius:20px!important; box-shadow:0 3px 15px #14141308!important; }
 html[data-claude-studio] ms-prompt-box:focus-within .prompt-box-container { border-color:#B4AA99!important; }
 html[data-claude-studio] ms-prompt-box .textarea-row { padding:0!important; }
-html[data-claude-studio] ms-prompt-box textarea { min-height:66px!important; max-height:30vh!important; padding:0!important; }
+html[data-claude-studio] ms-prompt-box textarea { field-sizing:content; height:auto!important; min-height:66px!important; max-height:30vh!important; padding:0!important; box-sizing:border-box; }
 html[data-claude-studio] ms-prompt-box .buttons-row { gap:6px!important; align-items:center!important; }
 html[data-claude-studio] ms-prompt-box button.ms-button-icon { width:30px!important; min-width:30px!important; height:30px!important; padding:4px!important; box-shadow:none!important; border:0!important; background:transparent!important; }
 html[data-claude-studio] ms-prompt-box .material-symbols-outlined { font-size:21px!important; }
@@ -117,9 +126,8 @@ html[data-claude-studio] #claude-studio-starters button { display:flex; align-it
 html[data-claude-studio] #claude-studio-starters button:hover { background:var(--cs-soft); color:var(--cs-text); }
 html[data-claude-studio] #claude-studio-starters .material-symbols-outlined { font-size:17px; }
 html[data-claude-studio][data-cs-draft] #claude-studio-starters { visibility:hidden; pointer-events:none; }
-html[data-claude-studio] .chat-view-container:not(.zero-state) { max-width:760px!important; }
-html[data-claude-studio] pre:has(.katex) { background:transparent!important; border:0!important; box-shadow:none!important; padding:8px 0!important; }
-html[data-claude-studio] .katex-display { overflow-x:auto; overflow-y:hidden; max-width:100%; margin:1.2em 0!important; }
+html[data-claude-studio] pre:has(.katex) { background:transparent!important; border:0!important; box-shadow:none!important; padding:4px 0!important; }
+html[data-claude-studio] .katex-display { overflow-x:auto; overflow-y:hidden; max-width:100%; margin:.75em 0!important; }
 @media(max-width:700px) {
  html[data-claude-studio] ms-prompt-box .enabled-tool-container { max-width:110px; }
  html[data-claude-studio] ms-prompt-box .tool-name { max-width:65px; }
@@ -130,12 +138,12 @@ html[data-claude-studio] .katex-display { overflow-x:auto; overflow-y:hidden; ma
 /* Conversation: quiet user bubble, unboxed answers, native KaTeX fonts. */
 html[data-claude-studio] .chat-turn-container.user { background:transparent!important; border:0!important; box-shadow:none!important; padding:0!important; margin:16px 0 28px!important; }
 html[data-claude-studio] .user-prompt-container { background:var(--cs-soft)!important; border:0!important; border-radius:16px!important; padding:14px 18px!important; margin-left:auto!important; max-width:88%!important; width:fit-content!important; }
-html[data-claude-studio] .user-prompt-container ms-cmark-node { font:14px/1.7 var(--cs-ui)!important; }
+html[data-claude-studio] .user-prompt-container :is(ms-text-chunk,.markdown) { font:14px/1.6 var(--cs-ui)!important; }
 html[data-claude-studio] .chat-turn-container.model { background:transparent!important; border:0!important; box-shadow:none!important; padding:0 8px!important; margin:0 0 24px!important; }
 html[data-claude-studio] .model-prompt-container { padding:0!important; }
 html[data-claude-studio] ms-cmark-node { overflow-wrap:anywhere; }
 html[data-claude-studio] ms-katex { overflow-wrap:normal; }
-html[data-claude-studio] ms-katex pre { border:0!important; background:transparent!important; box-shadow:none!important; margin:0!important; padding:8px 0!important; }
+html[data-claude-studio] ms-katex pre { border:0!important; background:transparent!important; box-shadow:none!important; margin:0!important; padding:4px 0!important; }
 html[data-claude-studio] ms-katex.inline pre { display:inline!important; padding:0!important; overflow:visible!important; }
 html[data-claude-studio] ms-katex code.rendered { background:transparent!important; color:inherit!important; padding:0!important; }
 html[data-claude-studio] ms-code-block { display:block; background:var(--cs-code-bg)!important; border:1px solid var(--cs-border)!important; border-radius:12px!important; overflow:hidden; margin:16px 0; }
@@ -150,6 +158,24 @@ html[data-claude-studio] ms-code-block pre { max-width:100%; overflow:auto; box-
 html[data-claude-studio] ms-prompt-box textarea:focus-visible { outline:none!important; }
 html[data-claude-studio] ms-prompt-box:focus-within .prompt-box-container { border-color:#BF624399!important; box-shadow:0 0 0 2px #BF62430D!important; }
 html[data-claude-studio] ms-token-count .token-count-container { font:11px/1.4 var(--cs-ui)!important; color:var(--cs-muted)!important; }
+
+/* Conversation: a one-line capsule; secondary tools and model sit below it.
+   Native controls stay in place, so disabling the theme restores their layout. */
+html[data-claude-studio]:not([data-cs-home]) .chunk-editor-main>footer { padding-bottom:48px!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .prompt-box-container { position:relative; display:grid!important; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; padding:8px 10px!important; border-radius:14px!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .textarea-row { grid-column:1; grid-row:1; align-self:center; min-width:0; margin:0!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .text-wrapper { min-height:0!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box textarea { width:100%!important; min-height:32px!important; padding:4px 0 4px 36px!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .buttons-row { display:contents!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .button-wrapper { grid-column:2; grid-row:1; align-self:end; margin:0!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .button-row-left { position:absolute; left:10px; top:calc(100% + 6px); width:calc(100% - 205px); height:30px; margin:0!important; }
+html[data-claude-studio]:not([data-cs-home]) ms-prompt-box ms-add-media-button { position:absolute; left:0; bottom:calc(100% + 14px); }
+html[data-claude-studio]:not([data-cs-home]) #claude-studio-model { position:absolute; right:0; top:calc(100% + 6px); height:30px; box-sizing:border-box; }
+html[data-claude-studio]:not([data-cs-home]) ms-chat-bottom-overlay { height:20px!important; }
+@media(max-width:700px) {
+ html[data-claude-studio]:not([data-cs-home]) #claude-studio-model { max-width:140px; }
+ html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .button-row-left { width:calc(100% - 165px); }
+}
 
 /* Inline math stays in the sentence; only display equations may scroll. */
 html[data-claude-studio] ms-cmark-node:has(>ms-katex.inline) { display:contents!important; }

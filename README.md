@@ -11,7 +11,7 @@
 | 脚本 | 版本 | 安装 |
 |---|---|---|
 | 默认 Gemini 4 Argon、High 思考、启动折叠右侧栏 | 3.1.0 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
-| Claude 暖纸主题 | 1.2.6 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| Claude 暖纸主题 | 1.3.0 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
@@ -31,6 +31,9 @@
 ## 主题：保留原生功能，重做阅读体验
 
 - 暖白、燕麦色、陶土色配色，衬线回答正文，居中的阅读栏和圆角输入框。
+- 回答正文统一为 **16px / 24px**，段落间距 10px，标题分级；表格采用 14px / 21px，减少松散留白并保持可读性。
+- 首页保留大输入框；进入对话后切换为约 **54px** 高的单行胶囊，附件、麦克风和发送在框内，工具与模型选择放在下方。
+- 多行输入自动增高，最高为视口高度的 30%；清空后恢复单行。使用浏览器原生 `field-sizing: content`，已在当前 Chrome 中验证。
 - 简洁首页、用户消息气泡，以及统一的 Markdown 表格、引用和代码块样式。
 - 输入框旁的模型名称打开原生模型选择器；保留附件、工具、麦克风、发送与停止控件。
 - “写作 / 学习 / 编程 / 分析”仅在草稿为空时填入提示，**不会自动发送，也不覆盖已有草稿**。
@@ -63,6 +66,15 @@ $$
 ```
 
 这里验证的是 AI Studio 的原生数学渲染，不是完整 `.tex` 文档或宏包的 LaTeX 编译。
+
+### 1.3.0：按 Claude 实页校准比例
+
+2026-11-02，参考 Claude 实际页面，并基于上述真实对话在 Chrome **110% 和 125%** 缩放下回归：
+
+- 对话输入框从约 144px 缩至 54px，包含下方工具行的底部区域从约 162px 缩至 102px；以上均为 CSS 像素，不乘浏览器缩放比例。
+- 回答正文从原先 17px / 30.6px 的设定统一为实测 16px / 24px，修正原生嵌套节点导致的字号混用；表格实测为 14px / 21px。
+- 五行草稿可自动增高，清空后缩回；附件菜单、工具菜单和原生模型选择器可正常打开。
+- 检查行内公式、独立公式、矩阵、Markdown 表格与代码围栏；首页与对话间切换、临时恢复原版布局均正常。
 
 ## 权限、兼容性与反馈
 
