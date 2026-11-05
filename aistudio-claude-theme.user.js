@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.5
+// @version      2.0.6
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -194,11 +194,11 @@ html[data-claude-studio] :is(.ms-button-icon, .ms-button-borderless):not([aria-d
 html[data-claude-studio] ms-prompt-box { display: block; background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: visible; }
 html[data-claude-studio] ms-prompt-box .prompt-box-container { margin: 0 !important; padding: 16px !important; background: var(--cs-input-bg) !important; border: 1px solid var(--cs-border) !important; border-radius: 20px !important; box-shadow: var(--cs-shadow) !important; }
 html[data-claude-studio] ms-prompt-box:focus-within .prompt-box-container { border-color: var(--cs-border-focus) !important; box-shadow: var(--cs-shadow-hover) !important; }
-/* Text focus follows the rounded composer; buttons retain their own focus rings. */
+/* Keep the composer focus ring inside its border, clear of the chat fade above it. */
 @media (forced-colors: none) {
   html[data-claude-studio] ms-prompt-box .prompt-box-container:has(textarea:focus) {
     border-color: var(--cs-accent) !important;
-    box-shadow: 0 0 0 1px var(--cs-accent), var(--cs-shadow-hover) !important;
+    box-shadow: inset 0 0 0 1px var(--cs-accent), var(--cs-shadow-hover) !important;
   }
   html[data-claude-studio] ms-prompt-box .prompt-box-container textarea:focus-visible {
     outline: none !important;
@@ -428,6 +428,9 @@ html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .button-row-left { po
 html[data-claude-studio]:not([data-cs-home]) ms-prompt-box ms-add-media-button { position: absolute; left: 0; bottom: calc(100% + 14px); }
 html[data-claude-studio]:not([data-cs-home]) #claude-studio-model { position: absolute; right: 0; top: calc(100% + 6px); height: 30px; box-sizing: border-box; }
 html[data-claude-studio]:not([data-cs-home]) ms-chat-bottom-overlay { height: 20px !important; }
+html[data-claude-studio]:not([data-cs-home]) .chunk-editor-main > footer > ms-chat-bottom-overlay .bottom-overlay {
+  background: linear-gradient(to top, var(--cs-bg), transparent) !important;
+}
 
 /* 行内与块级公式 */
 html[data-claude-studio] pre:has(.katex) { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 4px 0 !important; }
@@ -457,8 +460,11 @@ html[data-claude-studio] .chat-turn-container.user.render .user-prompt-container
 }
 /* The answer's paragraph rhythm must not add bottom padding inside a user bubble. */
 html[data-claude-studio] .chat-turn-container.user.render .user-prompt-container
-  :is(.markdown, .user-chunk > ms-cmark-node, .user-chunk > ms-cmark-node > ms-cmark-node:last-child) > p:last-child {
+  :is(.markdown, ms-cmark-node.user-chunk, ms-cmark-node.user-chunk > ms-cmark-node:last-child) > p:last-child {
   margin-block-end: 0 !important;
+}
+html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container > .turn-content > .turn-separator {
+  display: none !important;
 }
 /* Keep the native author heading and time in the accessibility tree, without a visual row. */
 html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container > .turn-content > .author-label {
