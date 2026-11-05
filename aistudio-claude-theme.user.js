@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.3
+// @version      2.0.4
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -432,6 +432,28 @@ html[data-claude-studio] ms-katex.inline .katex { white-space: nowrap !important
 html[data-claude-studio] .chat-turn-container.user { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; margin: 16px 0 28px !important; }
 html[data-claude-studio] .user-prompt-container { background: var(--cs-soft) !important; border: 0 !important; border-radius: 16px !important; padding: 14px 18px !important; margin-left: auto !important; max-width: 88% !important; width: fit-content !important; }
 html[data-claude-studio] .user-prompt-container :is(ms-text-chunk, .markdown) { font: 14px/1.6 var(--cs-ui) !important; }
+/* Rendered user messages: leave the composer and the inline editor unchanged. */
+html[data-claude-studio] .chat-turn-container.user.render {
+  padding-inline: 8px !important;
+  margin-bottom: 12px !important;
+}
+html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container {
+  box-sizing: border-box;
+  padding: 9px 14px !important;
+}
+html[data-claude-studio] .chat-turn-container.user.render .user-prompt-container :is(ms-text-chunk, .markdown) {
+  font: 15px/1.5 var(--cs-ui) !important;
+}
+/* Keep the native author heading and time in the accessibility tree, without a visual row. */
+html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container > .turn-content > .author-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: 0 !important;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 html[data-claude-studio] .chat-turn-container.model {
   background: transparent !important;
   border: 0 !important;
