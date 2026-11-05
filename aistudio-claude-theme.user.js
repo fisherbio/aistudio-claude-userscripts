@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.1
+// @version      2.0.2
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -443,6 +443,68 @@ html[data-claude-studio] .chat-turn-container.model {
 html[data-claude-studio] .model-prompt-container {
   padding: 0 !important;
   margin-bottom: 12px !important;
+}
+
+/* Thoughts: use a quiet disclosure above the answer, with AI Studio's native toggle. */
+html[data-claude-studio] ms-thought-chunk .compact-accordion > .thought-panel {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel > .top-panel-header {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 32px;
+  height: auto !important;
+  padding: 4px 8px !important;
+  border-radius: 7px !important;
+  background: transparent !important;
+  color: var(--cs-muted) !important;
+  font: 500 13px/1.4 var(--cs-ui) !important;
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel > .top-panel-header[aria-disabled="false"]:hover {
+  background: var(--cs-soft) !important;
+  color: var(--cs-text) !important;
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel > .top-panel-header:focus-visible {
+  outline: 2px solid var(--cs-accent) !important;
+  outline-offset: -2px;
+}
+html[data-claude-studio] ms-thought-chunk .top-panel-header .top-panel-title {
+  gap: 6px;
+  margin: 0 !important;
+  color: inherit !important;
+  font: inherit !important;
+  filter: grayscale(1);
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel > .top-panel-header[aria-disabled="false"]::after {
+  content: "";
+  flex: 0 0 6px;
+  height: 6px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(-45deg);
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel > .top-panel-header[aria-expanded="true"]::after {
+  transform: translateY(-2px) rotate(45deg);
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel > .mat-expansion-panel-content-wrapper .mat-expansion-panel-body {
+  margin: 4px 0 8px 8px;
+  padding: 2px 0 2px 14px !important;
+  border-inline-start: 1px solid var(--cs-border);
+}
+html[data-claude-studio] ms-thought-chunk .thought-panel .mat-expansion-panel-body :is(ms-text-chunk, .markdown) {
+  color: var(--cs-muted) !important;
+  font-size: 15px !important;
+}
+/* Hide the secondary hint only when the native header is available as the disclosure. */
+html[data-claude-studio] ms-thought-chunk .compact-accordion:has(> .thought-panel > .top-panel-header[aria-disabled="false"])
+  > mat-expansion-panel[disabled]:has(> mat-expansion-panel-header .thought-panel-footer) {
+  display: none !important;
 }
 
 /* 关键防线 2：Grounding 搜索建议卡片安全下外距与容器防护（防止多列/折行链接紧贴底部被盖住） */
