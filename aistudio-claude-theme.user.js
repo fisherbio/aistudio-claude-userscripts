@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.0
+// @version      2.0.1
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -194,6 +194,16 @@ html[data-claude-studio] :is(.ms-button-icon, .ms-button-borderless):not([aria-d
 html[data-claude-studio] ms-prompt-box { display: block; background: transparent !important; border: 0 !important; box-shadow: none !important; overflow: visible; }
 html[data-claude-studio] ms-prompt-box .prompt-box-container { margin: 0 !important; padding: 16px !important; background: var(--cs-input-bg) !important; border: 1px solid var(--cs-border) !important; border-radius: 20px !important; box-shadow: var(--cs-shadow) !important; }
 html[data-claude-studio] ms-prompt-box:focus-within .prompt-box-container { border-color: var(--cs-border-focus) !important; box-shadow: var(--cs-shadow-hover) !important; }
+/* Text focus follows the rounded composer; buttons retain their own focus rings. */
+@media (forced-colors: none) {
+  html[data-claude-studio] ms-prompt-box .prompt-box-container:has(textarea:focus) {
+    border-color: var(--cs-accent) !important;
+    box-shadow: 0 0 0 1px var(--cs-accent), var(--cs-shadow-hover) !important;
+  }
+  html[data-claude-studio] ms-prompt-box .prompt-box-container textarea:focus-visible {
+    outline: none !important;
+  }
+}
 html[data-claude-studio] ms-prompt-box textarea { background: transparent !important; color: var(--cs-text) !important; font: 16px/1.5 var(--cs-ui) !important; caret-color: var(--cs-accent); field-sizing: content; height: auto !important; min-height: 66px !important; max-height: 30vh !important; padding: 0 !important; box-sizing: border-box; }
 html[data-claude-studio] ms-prompt-box textarea::placeholder { color: var(--cs-placeholder) !important; opacity: 1; }
 html[data-claude-studio] ms-prompt-box button { font-size: 12px !important; }
