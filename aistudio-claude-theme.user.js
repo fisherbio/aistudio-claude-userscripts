@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.2
+// @version      2.0.3
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -436,16 +436,21 @@ html[data-claude-studio] .chat-turn-container.model {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-  padding: 0 8px 46px !important; /* 关键防线 1：底部预留 46px 绝对安全缓冲带，确保大屏宽屏下操作条绝对不遮挡正文 */
-  margin: 0 0 28px !important;
+  padding: 0 8px !important;
+  margin: 0 0 20px !important;
   position: relative !important;
 }
 html[data-claude-studio] .model-prompt-container {
   padding: 0 !important;
-  margin-bottom: 12px !important;
 }
 
 /* Thoughts: use a quiet disclosure above the answer, with AI Studio's native toggle. */
+html[data-claude-studio] ms-chat-turn.thought-activity-host > .chat-turn-container.model {
+  margin-bottom: 0 !important;
+}
+html[data-claude-studio] ms-thought-chunk {
+  margin-bottom: 0 !important;
+}
 html[data-claude-studio] ms-thought-chunk .compact-accordion > .thought-panel {
   background: transparent !important;
   border: 0 !important;
@@ -507,40 +512,17 @@ html[data-claude-studio] ms-thought-chunk .compact-accordion:has(> .thought-pane
   display: none !important;
 }
 
-/* 关键防线 2：Grounding 搜索建议卡片安全下外距与容器防护（防止多列/折行链接紧贴底部被盖住） */
-html[data-claude-studio] :is(ms-grounding-chunk, .grounding-container, ms-search-suggestions, [class*="grounding" i]) {
-  display: block !important;
-  margin-bottom: 22px !important;
-  clear: both !important;
+/* Hide rating buttons and their empty capsule, not run stats or status messages. */
+html[data-claude-studio] .chat-turn-container.model > .turn-footer > .response-feedback-button,
+html[data-claude-studio] .chat-turn-container.model > .turn-footer:not(:has(> :not(.response-feedback-button))) {
+  display: none !important;
 }
-
-/* 关键防线 3：点赞点踩（Thumbs up / down）与模型反馈操作条定位加固：严禁侵入正文，锁定在底部避让安全区 */
-html[data-claude-studio] :is(.chat-turn-container.model, ms-chat-turn, ms-model-turn) :is(
-  ms-thumbs-up-down,
-  ms-feedback-buttons,
-  ms-chat-turn-actions,
-  .turn-actions,
-  .chat-turn-actions,
-  .model-actions,
-  .feedback-container,
-  [class*="feedback" i]:has(button),
-  [class*="thumb" i]:has(button),
-  [class*="action" i]:has(button)
-) {
-  bottom: 6px !important;
-  left: 8px !important;
-  z-index: 5 !important;
-}
-
-/* 若该操作条为非绝对定位或行级浮动，强制推至卡片正文下方，不与文本卡片重合 */
-html[data-claude-studio] :is(.chat-turn-container.model, ms-chat-turn) :is(
-  ms-thumbs-up-down,
-  ms-feedback-buttons,
-  .turn-actions
-):not([style*="absolute"]) {
-  margin-top: 14px !important;
-  display: inline-flex !important;
-  align-items: center !important;
+html[data-claude-studio] .chat-turn-container.model > .turn-footer {
+  position: static !important;
+  align-self: flex-start;
+  margin: 4px 0 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
 }
 
 /* ==================== 原生 View Transition 圆形扩散动画 (双轨驱动) ==================== */
