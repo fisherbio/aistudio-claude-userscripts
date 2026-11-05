@@ -1,8 +1,6 @@
-# AI Studio · Claude 暖纸主题与默认设置
+# AI Studio · Claude 双主题与默认设置
 
-让 Google AI Studio 更适合专注阅读与对话：Claude 风格的暖纸界面，以及 Gemini 4 Argon / High / 无闪烁侧栏启动。
-
-![Claude 暖纸主题实际效果](docs/preview.png)
+给 Google AI Studio 换上 Claude 风格的暖纸或暗黑界面，按需搭配 Gemini 4 Argon、High 思考和无闪烁侧栏启动。
 
 ## 安装：两个脚本，按需选择
 
@@ -11,11 +9,13 @@
 | 脚本 | 版本 | 安装 |
 |---|---|---|
 | 默认 Gemini 4 Argon、High 思考、启动折叠右侧栏 | 3.1.0 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
-| Claude 暖纸主题 | 1.3.0 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| Claude 暖纸与暗黑双主题 | 2.0.0 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
-**已有同名脚本的用户**：确认油猴是在更新原脚本；不要同时启用多份默认设置脚本。其他自动关闭 Run settings 的脚本也应停用，以免争抢面板。
+**从主题 1.3.0 或 PR 试用版升级**：2.0.0 改了脚本名称。安装后到油猴管理面板确认只启用一份主题脚本；如果新版被装成另一份，先停用旧版或试用版。默认设置脚本可以继续启用。
+
+默认设置脚本也只需启用一份；停用其他自动关闭 Run settings 的脚本，以免争抢面板。
 
 ## 默认设置脚本：后台配置，再显示完成的页面
 
@@ -28,20 +28,20 @@
 
 **账户必须能使用该模型和 High 选项。** 脚本只操作现有界面，不提供模型权限，也不会自动发送请求。
 
-## 主题：保留原生功能，重做阅读体验
+## 双主题：左键切外观，右键开设置
 
-- 暖白、燕麦色、陶土色配色，衬线回答正文，居中的阅读栏和圆角输入框。
-- 回答正文统一为 **16px / 24px**，段落间距 10px，标题分级；表格采用 14px / 21px，减少松散留白并保持可读性。
-- 首页保留大输入框；进入对话后切换为约 **54px** 高的单行胶囊，附件、麦克风和发送在框内，工具与模型选择放在下方。
-- 多行输入自动增高，最高为视口高度的 30%；清空后恢复单行。使用浏览器原生 `field-sizing: content`，已在当前 Chrome 中验证。
-- 简洁首页、用户消息气泡，以及统一的 Markdown 表格、引用和代码块样式。
-- 输入框旁的模型名称打开原生模型选择器；保留附件、工具、麦克风、发送与停止控件。
-- “写作 / 学习 / 编程 / 分析”仅在草稿为空时填入提示，**不会自动发送，也不覆盖已有草稿**。
-- 油猴菜单“切换 Claude 暖纸主题 / 原版”临时切换当前页；停用主题脚本可长期恢复原版。
+首次使用 2.0.0 时，默认以**暗黑主题**启动，对话区最大宽度为 **960px**。想保留 1.3.0 的观感？右键点 AI Studio 右上角的太阳／月亮按钮，在「启动默认外观」选「默认暖纸」，在宽度选项里选「760px 紧凑」。
 
-主题不改变回答原文，不替换 Markdown / KaTeX 解析器。可在源码顶部的 `--cs-*` CSS 变量中调整配色，字体使用本机可用字体。
+- **切换当前外观**：左键点击太阳／月亮按钮，在暖纸和暗黑之间切换。浏览器支持 View Transition 且未启用减少动态效果时，会播放圆形扩散动画。临时切换不改变下次启动的默认外观。
+- **打开 Claude 偏好设置**：右键或 Alt+左键点击该按钮，也可用 Alt+C 或油猴菜单「Claude 偏好设置」。图钉可让面板在点击外部时保持打开；按 Esc 或点击「完成」可关闭。
+- **调整阅读体验**：动画速度可调至 **0.1×–2.0×**，对话宽度可选 **760px、960px、1120px、100%**。动画速度、宽度和启动外观会保存在本机；「恢复默认」会还原为 **1.0×、960px、暗黑**。
+- **回到原版**：在油猴管理面板停用主题脚本并刷新。主题切换也会尝试同步 AI Studio 自己的主题偏好；如果刷新后原生外观仍是暗色，可在 AI Studio 的外观设置里改回。
 
-## 公式与排版实测
+两种外观都保留居中阅读栏、衬线回答、对话胶囊输入框和原生模型选择器。2.0.0 给回复底部的反馈按钮和搜索建议预留了空间，以减少宽屏时的遮挡。「写作 / 学习 / 编程 / 分析」只在草稿为空时填入提示，不会自动发送。主题不改变回答原文，也不替换 Markdown 或 KaTeX 解析器。
+
+## 公式与排版：1.3.0 及以前的实测记录
+
+![2.0.0 之前的暖纸主题实测截图](docs/preview.png)
 
 2026-11-01，在 Chrome / Tampermonkey 5.5.1 中使用 Gemini 3.8 Flash 完成两次真实对话测试：
 
@@ -78,13 +78,13 @@ $$
 
 ## 权限、兼容性与反馈
 
-两份脚本均只匹配 `https://aistudio.google.com/*`，使用 `GM_registerMenuCommand` 添加本地菜单；不包含 API 密钥、遥测或向第三方上传对话的逻辑。模型请求仍由 AI Studio 本身处理。
+两份脚本均只匹配 `https://aistudio.google.com/*`，使用 `GM_registerMenuCommand` 添加油猴菜单。主题脚本还使用 `GM_getValue` / `GM_setValue` 在油猴中读写外观偏好。脚本不包含 API 密钥、遥测或向第三方上传对话的逻辑；模型请求仍由 AI Studio 本身处理。
 
-脚本依赖 AI Studio 当前 DOM 与控件标签，上游改版后可能需要更新。遇到问题，请在 [Issues](https://github.com/fisherbio/aistudio-claude-userscripts/issues) 提供脚本版本、复现步骤和已去除隐私信息的截图。不要上传 API 密钥或私人对话。
+2.0.0 的设置面板在某些严格限制 HTML 写入的页面环境中可能无法打开。脚本也依赖 AI Studio 的页面结构和控件标签。遇到问题，请在 [Issues](https://github.com/fisherbio/aistudio-claude-userscripts/issues) 提供脚本版本、复现步骤和已去除隐私信息的截图。不要上传 API 密钥或私人对话。
 
 ## 开发
 
-无需构建或依赖安装。修改 `.user.js` 后在油猴中保存并刷新 AI Studio。Node.js 可做基础语法检查：
+无需构建或依赖安装。要自定义配色，可调整主题脚本的 `--cs-*` CSS 变量。修改 `.user.js` 后在油猴中保存并刷新 AI Studio。Node.js 可做基础语法检查：
 
 ```sh
 node --check aistudio-argon-defaults.user.js
