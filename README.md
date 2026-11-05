@@ -9,7 +9,7 @@
 | 脚本 | 版本 | 安装 |
 |---|---|---|
 | 默认 Gemini 4 Argon、High 思考、启动折叠右侧栏 | 3.1.0 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
-| Claude 暖纸与暗黑双主题 | 2.0.4 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| Claude 暖纸与暗黑双主题 | 2.0.5 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
@@ -34,7 +34,7 @@
 
 - **切换当前外观**：左键点击太阳／月亮按钮，在暖纸和暗黑之间切换。浏览器支持 View Transition 且未启用减少动态效果时，会播放圆形扩散动画。临时切换不改变下次启动的默认外观。
 - **打开 Claude 偏好设置**：右键或 Alt+左键点击该按钮，也可用 Alt+C 或油猴菜单「Claude 偏好设置」。图钉可让面板在点击外部时保持打开；按 Esc 或点击「完成」可关闭。
-- **调整阅读体验**：动画速度可调至 **0.1×–2.0×**，对话宽度可选 **760px、960px、1120px、100%**。动画速度、宽度和启动外观会保存在本机；「恢复默认」会还原为 **1.0×、960px、暗黑**。
+- **调整阅读体验**：动画速度可调至 **0.1×–2.0×**，对话宽度可选 **760px、960px、1120px、100%**。单栏对话不显示底部横向滚动条；超宽代码、表格和公式仍可在各自区域内横向滚动。动画速度、宽度和启动外观会保存在本机；「恢复默认」会还原为 **1.0×、960px、暗黑**。
 - **查看思考内容**：点击回答上方的「Thoughts」展开或收起。思考区沿用 AI Studio 的原生内容和控件，暖纸和暗黑主题下都采用轻量折叠样式。
 - **回到原版**：在油猴管理面板停用主题脚本并刷新。主题切换也会尝试同步 AI Studio 自己的主题偏好；如果刷新后原生外观仍是暗色，可在 AI Studio 的外观设置里改回。
 

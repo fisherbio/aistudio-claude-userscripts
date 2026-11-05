@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.4
+// @version      2.0.5
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -258,6 +258,15 @@ html[data-claude-studio] .chat-view-container:not(.zero-state) {
   box-sizing: border-box !important;
   padding-inline: 16px !important;
 }
+/* Keep horizontal scrolling inside wide content, not on the conversation column. */
+html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) {
+  overflow-x: hidden !important;
+}
+html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) :is(ms-code-block pre, ms-cmark-node .table-container) {
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto;
+}
 html[data-claude-studio] .chunk-editor-main > footer { max-width: var(--cs-chat-width, 960px) !important; width: calc(100% - 48px) !important; margin-inline: auto !important; padding-bottom: 18px !important; }
 html[data-claude-studio] :is(ms-text-chunk, .markdown) { color: var(--cs-text) !important; font: 16px/1.5 var(--cs-reading) !important; }
 html[data-claude-studio] ms-cmark-node { color: inherit !important; font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; }
@@ -439,10 +448,17 @@ html[data-claude-studio] .chat-turn-container.user.render {
 }
 html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container {
   box-sizing: border-box;
-  padding: 9px 14px !important;
+  border-radius: 12px !important;
+  padding: 10px 16px !important;
 }
 html[data-claude-studio] .chat-turn-container.user.render .user-prompt-container :is(ms-text-chunk, .markdown) {
-  font: 15px/1.5 var(--cs-ui) !important;
+  font: 16px/1.5 var(--cs-ui) !important;
+  text-align: start;
+}
+/* The answer's paragraph rhythm must not add bottom padding inside a user bubble. */
+html[data-claude-studio] .chat-turn-container.user.render .user-prompt-container
+  :is(.markdown, .user-chunk > ms-cmark-node, .user-chunk > ms-cmark-node > ms-cmark-node:last-child) > p:last-child {
+  margin-block-end: 0 !important;
 }
 /* Keep the native author heading and time in the accessibility tree, without a visual row. */
 html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container > .turn-content > .author-label {
