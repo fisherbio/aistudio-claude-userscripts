@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.6
+// @version      2.0.7
 // @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
@@ -12,6 +12,8 @@
 // @license      MIT
 // @homepageURL  https://github.com/fisherbio/aistudio-claude-userscripts
 // @supportURL   https://github.com/fisherbio/aistudio-claude-userscripts/issues
+// @downloadURL  https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js
+// @updateURL    https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js
 // ==/UserScript==
 
 (function () {
@@ -556,17 +558,11 @@ html[data-claude-studio] ms-thought-chunk .compact-accordion:has(> .thought-pane
   display: none !important;
 }
 
-/* Hide rating buttons and their empty capsule, not run stats or status messages. */
-html[data-claude-studio] .chat-turn-container.model > .turn-footer > .response-feedback-button,
-html[data-claude-studio] .chat-turn-container.model > .turn-footer:not(:has(> :not(.response-feedback-button))) {
-  display: none !important;
-}
+/* 彻底隐藏点赞反馈按钮以及模型响应用时秒数小胶囊 (Model run stats) 及底栏 */
+.model-run-time-pill,
+[dialoglabel="Model run stats"],
 html[data-claude-studio] .chat-turn-container.model > .turn-footer {
-  position: static !important;
-  align-self: flex-start;
-  margin: 4px 0 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
+  display: none !important;
 }
 
 /* ==================== 原生 View Transition 圆形扩散动画 (双轨驱动) ==================== */

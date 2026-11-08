@@ -9,7 +9,7 @@
 | 脚本 | 版本 | 安装 |
 |---|---|---|
 | 默认 Gemini 4 Argon、High 思考、启动折叠右侧栏 | 3.1.0 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
-| Claude 暖纸与暗黑双主题 | 2.0.6 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| Claude 暖纸与暗黑双主题 | 2.0.7 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
@@ -36,6 +36,12 @@
 - **打开 Claude 偏好设置**：右键或 Alt+左键点击该按钮，也可用 Alt+C 或油猴菜单「Claude 偏好设置」。图钉可让面板在点击外部时保持打开；按 Esc 或点击「完成」可关闭。
 - **调整阅读体验**：动画速度可调至 **0.1×–2.0×**，对话宽度可选 **760px、960px、1120px、100%**。动画速度、宽度和启动外观会保存在本机；「恢复默认」会还原为 **1.0×、960px、暗黑**。
 - **回到原版**：在油猴管理面板停用主题脚本并刷新。主题切换也会尝试同步 AI Studio 自己的主题偏好；如果刷新后原生外观仍是暗色，可在 AI Studio 的外观设置里改回。
+
+## 2.0.7：彻底移除悬浮响应秒数胶囊
+
+- **去除突兀气泡**：修复了鼠标悬停（Hover）在模型回复的「Thoughts」折叠条或正文上方时，会自动弹出白色用时秒数小气泡（如 `20.3s`、`21.5s`）的问题。
+- **纯净阅读体验**：在样式规则中彻底隐藏 `.model-run-time-pill`、`[dialoglabel="Model run stats"]` 以及模型输出底栏 `.turn-footer`，保持阅读专注与视觉一致。
+- **配置与稳定性**：补齐脚本元数据中的更新与安装地址，优化脚本加载与语法兼容性。
 
 ## 2.0.6：对话区更紧凑
 
