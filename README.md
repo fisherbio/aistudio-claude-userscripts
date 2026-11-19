@@ -1,6 +1,6 @@
 # AI Studio · Claude 双主题与默认设置
 
-给 Google AI Studio 换上 Claude 风格的暖纸或暗黑界面，按需搭配 Gemini 4 Argon、High 思考和无闪烁侧栏启动。
+给 Google AI Studio 换上 Claude 风格的暖纸或暗黑界面，按需搭配 Gemini 4 默认模型与思考强度自动切换及无闪烁侧栏启动。
 
 ## 安装：两个脚本，按需选择
 
@@ -8,25 +8,30 @@
 
 | 脚本 | 版本 | 安装 |
 |---|---|---|
-| 默认 Gemini 4 Argon、High 思考、启动折叠右侧栏 | 3.1.0 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
+| Gemini 4 默认模型与思考强度自动切换、启动折叠右侧栏 | 4.0.1 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
 | Claude 暖纸与暗黑双主题 | 2.0.7 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
-**从主题 1.3.0 或 PR 试用版升级**：2.0.0 改了脚本名称。安装后到油猴管理面板确认只启用一份主题脚本；如果新版被装成另一份，先停用旧版或试用版。默认设置脚本可以继续启用。
+**从旧版升级**：主题脚本 2.0.0、默认设置脚本 4.0.1 均更新了脚本名称。安装后到油猴管理面板确认每类脚本只启用一份；如果新版被装成另一份，先停用旧版或试用版。
 
-默认设置脚本也只需启用一份；停用其他自动关闭 Run settings 的脚本，以免争抢面板。
+停用其他自动关闭 Run settings 的脚本，以免争抢面板。
 
-## 默认设置脚本：后台配置，再显示完成的页面
+## 默认设置脚本：自定义 Gemini 4 预设，后台无闪烁切换
 
-- 在 `document-start` 安装启动遮罩，隐藏 Run settings 与模型选择弹层，避免可见的展开、切换和折叠动画。
-- 通过 AI Studio 原生控件选择 **Gemini 4 Argon** 和 **High**，读回确认后折叠侧栏、解除遮罩。
-- 支持 `/prompts/` 下的刷新、新建对话和 SPA 导航。
-- 配置失败时解除遮罩并显示提示，保留面板供检查；油猴菜单可重试、查看状态或切换侧栏。
+- **支持全部 Gemini 4 系列模型及各自可用思考强度**：
+  - **Gemini 4 Neon** (`gemini-4-neon`)：`Low` / `Medium` / `High` / `Extra High`
+  - **Gemini 4 Hydrogen** (`gemini-4-hydrogen`)：`Low` / `Medium` / `High` / `Extra High`
+  - **Gemini 4 Carbon** (`gemini-4-carbon`，Paid)：`Low` / `Medium` / `High`
+  - **Gemini 4 Argon** (`gemini-4-argon`)：`Low` / `Medium` / `High`
+  - 首次安装默认沿用 **Gemini 4 Argon · High**，各模型独立记住各自选过的思考强度，并通过油猴存储跨标签页实时同步。
+- **顶栏胶囊与油猴菜单双入口**：顶部工具栏右侧提供轻量胶囊按钮（如 `Argon · High ▾`，自动适配暖纸/暗黑主题与 AI Studio 原生主题），点击可弹出面板切换默认模型、思考强度，以及「打开页面 / 新对话时自动切换」和「切换完成后自动折叠右侧栏」开关，并一键立即应用到当前页；也可从油猴菜单打开面板、立即应用或暂停自动切换。
+- **无闪烁后台配置**：在 `document-start` 安装启动遮罩，隐藏 Run settings 与模型选择弹层，避免可见的展开、切换和折叠动画；若模型弹窗上次停留在其他分类页或搜索过滤状态，会自动切回 `Gemini` / `All` 列表再点选，读回确认稳定生效后再折叠侧栏、解除遮罩。
+- **路由与对话兼容**：支持 `/prompts/` 下的刷新、新建对话和 SPA 导航；在新对话发送首条消息导致地址静默升格为 `/prompts/<id>` 时不中断当前对话；配置失败时解除遮罩并提示，保留面板供检查。
 
-每次打开或新建对话时会重新应用默认设置，包括打开已有对话。初始化完成后仍可手动换模型；下一次刷新或新建对话会恢复 Argon / High。要长期使用别的默认模型，可停用此脚本。
+初始化完成后仍可在页面内临时手动换模型；下一次刷新、新建对话或切换对话时会自动恢复预设。需要临时关闭自动切换，可在顶栏配置面板或油猴菜单中一键暂停。
 
-**账户必须能使用该模型和 High 选项。** 脚本只操作现有界面，不提供模型权限，也不会自动发送请求。
+**账户必须能使用所选模型及对应思考强度选项。** 脚本只操作现有界面，不提供模型权限，也不会自动发送请求。
 
 ## 双主题：左键切外观，右键开设置
 
@@ -91,7 +96,7 @@ $$
 
 ## 权限、兼容性与反馈
 
-两份脚本均只匹配 `https://aistudio.google.com/*`，使用 `GM_registerMenuCommand` 添加油猴菜单。主题脚本还使用 `GM_getValue` / `GM_setValue` 在油猴中读写外观偏好。脚本不包含 API 密钥、遥测或向第三方上传对话的逻辑；模型请求仍由 AI Studio 本身处理。
+两份脚本均只匹配 `https://aistudio.google.com/*`，使用 `GM_registerMenuCommand`、`GM_getValue` / `GM_setValue` 在油猴中提供菜单并保存本机偏好（默认设置脚本还使用 `GM_unregisterMenuCommand` / `GM_addValueChangeListener` 动态刷新菜单与跨标签页同步预设，且配置面板全程采用纯 DOM API 构建以兼容 Trusted Types）。脚本不包含 API 密钥、遥测或向第三方上传对话的逻辑；模型请求仍由 AI Studio 本身处理。
 
 在严格限制 HTML 写入的页面环境中，设置面板可能无法打开。脚本也依赖 AI Studio 的页面结构和控件标签。遇到问题，请在 [Issues](https://github.com/fisherbio/aistudio-claude-userscripts/issues) 提供脚本版本、复现步骤和已去除隐私信息的截图。不要上传 API 密钥或私人对话。
 
