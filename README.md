@@ -1,15 +1,16 @@
 # AI Studio · Claude 双主题与默认设置
 
-给 Google AI Studio 换上 Claude 风格的暖纸或暗黑界面，按需搭配 Gemini 4 默认模型与思考强度自动切换及无闪烁侧栏启动。
+给 Google AI Studio 换上 Claude 风格的暖纸或暗黑界面，按需搭配 Gemini 4 默认模型与思考强度自动切换、无闪烁侧栏启动，以及 KaTeX 公式 LaTeX / Markdown 还原复制。
 
-## 安装：两个脚本，按需选择
+## 安装：三个脚本，按需选择
 
-先在 Chrome 安装 [Tampermonkey](https://www.tampermonkey.net/)，再点击所需脚本并在油猴安装页确认。两者可以一起启用，也可以只安装其中一个。
+先在 Chrome 安装 [Tampermonkey](https://www.tampermonkey.net/)，再点击所需脚本并在油猴安装页确认。三者完全独立，可以一起启用，也可以只安装其中任意一个。
 
 | 脚本 | 版本 | 安装 |
 |---|---|---|
 | Gemini 4 默认模型与思考强度自动切换、启动折叠右侧栏 | 4.0.1 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
 | Claude 暖纸与暗黑双主题 | 2.0.7 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| 公式复制还原 LaTeX / Markdown（独立轻量脚本） | 1.0.0 | [安装公式复制脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-katex-copy.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
@@ -32,6 +33,15 @@
 初始化完成后仍可在页面内临时手动换模型；下一次刷新、新建对话或切换对话时会自动恢复预设。需要临时关闭自动切换，可在顶栏配置面板或油猴菜单中一键暂停。
 
 **账户必须能使用所选模型及对应思考强度选项。** 脚本只操作现有界面，不提供模型权限，也不会自动发送请求。
+
+## 公式复制脚本：精准正文 + 完整 LaTeX / Markdown 还原
+
+解决 AI Studio 中直接框选 KaTeX 公式复制时出现乱序断行或重复字符的问题：
+
+- **只选中公式一部分 → 自动补全整条公式**：无论只划中公式的上下标还是局部片段，都从该 `<ms-katex>` 内部的 `<annotation encoding="application/x-tex">` 提取完整原始 TeX。
+- **正文与公式混选 → 精准正文 + 完整公式**：非公式正文严格按起止字符截取，起止端落入公式内部时只对真正框中可见字符的公式自动补全；若选区只是停在相邻公式边缘或零宽占位符（`\u200b`）上，不会误把旁边未选中的公式吸附进来。
+- **结构保留与无侵入放行**：跨段落、标题、无序/有序列表（局部框选第 2、3 项也能保持原序号）与代码块混选时自动输出整洁的 Markdown；选区不含公式或位于输入框内时完全放行给浏览器原生复制。
+- **双击单个公式快捷复制与格式切换**：默认支持双击任意公式直接复制整条公式；油猴菜单支持循环切换三种格式——`Markdown ($ / $$)`（默认）、`LaTeX (\(...\) / \[...\])`、`单公式纯 TeX / 混选 $`，以及开关双击复制、轻提示或临时暂停。
 
 ## 双主题：左键切外观，右键开设置
 
@@ -96,9 +106,9 @@ $$
 
 ## 权限、兼容性与反馈
 
-两份脚本均只匹配 `https://aistudio.google.com/*`，使用 `GM_registerMenuCommand`、`GM_getValue` / `GM_setValue` 在油猴中提供菜单并保存本机偏好（默认设置脚本还使用 `GM_unregisterMenuCommand` / `GM_addValueChangeListener` 动态刷新菜单与跨标签页同步预设，且配置面板全程采用纯 DOM API 构建以兼容 Trusted Types）。脚本不包含 API 密钥、遥测或向第三方上传对话的逻辑；模型请求仍由 AI Studio 本身处理。
+三份脚本均只匹配 `https://aistudio.google.com/*`，使用 `GM_registerMenuCommand`、`GM_getValue` / `GM_setValue` 在油猴中提供菜单并保存本机偏好（默认设置脚本与公式复制脚本还使用 `GM_unregisterMenuCommand`，默认设置脚本额外使用 `GM_addValueChangeListener` 跨标签页同步预设；两者的界面提示/面板均采用纯 DOM API 构建以兼容 Trusted Types）。脚本不包含 API 密钥、遥测或向第三方上传对话的逻辑；模型请求仍由 AI Studio 本身处理。
 
-在严格限制 HTML 写入的页面环境中，设置面板可能无法打开。脚本也依赖 AI Studio 的页面结构和控件标签。遇到问题，请在 [Issues](https://github.com/fisherbio/aistudio-claude-userscripts/issues) 提供脚本版本、复现步骤和已去除隐私信息的截图。不要上传 API 密钥或私人对话。
+在严格限制 HTML 写入的页面环境中，主题脚本的设置面板可能无法打开。脚本也依赖 AI Studio 的页面结构和控件标签。遇到问题，请在 [Issues](https://github.com/fisherbio/aistudio-claude-userscripts/issues) 提供脚本版本、复现步骤和已去除隐私信息的截图。不要上传 API 密钥或私人对话。
 
 ## 开发
 
@@ -107,6 +117,7 @@ $$
 ```sh
 node --check aistudio-argon-defaults.user.js
 node --check aistudio-claude-theme.user.js
+node --check aistudio-katex-copy.user.js
 ```
 
 语法检查不代替真实页面的交互与视觉验证。
