@@ -9,7 +9,7 @@
 | 脚本 | 版本 | 安装 |
 |---|---|---|
 | Gemini 4 默认模型与思考强度自动切换、启动折叠右侧栏 | 4.0.1 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
-| Claude 暖纸与暗黑双主题 | 2.0.7 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| Claude 暖纸与暗黑双主题 | 2.0.8 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
 | 公式复制还原 LaTeX / Markdown（独立轻量脚本） | 1.0.0 | [安装公式复制脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-katex-copy.user.js) |
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
@@ -51,6 +51,12 @@
 - **打开 Claude 偏好设置**：右键或 Alt+左键点击该按钮，也可用 Alt+C 或油猴菜单「Claude 偏好设置」。图钉可让面板在点击外部时保持打开；按 Esc 或点击「完成」可关闭。
 - **调整阅读体验**：动画速度可调至 **0.1×–2.0×**，对话宽度可选 **760px、960px、1120px、100%**。动画速度、宽度和启动外观会保存在本机；「恢复默认」会还原为 **1.0×、960px、暗黑**。
 - **回到原版**：在油猴管理面板停用主题脚本并刷新。主题切换也会尝试同步 AI Studio 自己的主题偏好；如果刷新后原生外观仍是暗色，可在 AI Studio 的外观设置里改回。
+
+## 2.0.8：滑动条贴最右缘与左右留白全宽可滚
+
+- **右侧滑动条贴边**：将居中限宽从外层 `.chat-view-container` 下移到内层 `.chat-session-content`，让实际滚动容器 `ms-autoscroll-container` 铺满主对话区全宽，并将 AI Studio 的右侧滑动条/轮次定位轨（`ms-items-scrollbar`）固定到主对话区最右缘（右侧 `Run settings` 展开时自动贴在其左侧，不遮挡内容）。
+- **左右留白全区域可滚**：对话正文左侧与右侧的大片空白现在位于滚动容器内，原生支持鼠标滚轮与触控板惯性滚动；额外为滑动条轨本身与底部输入框左右两侧留白提供轻量级滚轮转发，同时不影响输入框多行草稿滚动与横向手势。
+- **宽屏输入框对齐**：将对话态底栏容器恢复全宽并将限宽移至 `ms-prompt-box`，在 `1120px` 与 `100%` 满屏模式下输入框也能完整匹配所选宽度。
 
 ## 2.0.7：彻底移除悬浮响应秒数胶囊
 

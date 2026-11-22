@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.7
-// @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、自动同步原生主题设置、可自定义启动默认主题。
+// @version      2.0.8
+// @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、右侧贴边滑动条与全宽左右留白可滚、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
@@ -252,24 +252,60 @@ html[data-claude-studio] :is(.mat-mdc-menu-panel, .mat-mdc-select-panel, mat-dia
 html[data-claude-studio] :is(.mat-mdc-option, .mat-mdc-menu-item) { color: var(--cs-text) !important; font-family: var(--cs-ui) !important; }
 html[data-claude-studio] :is(.mat-mdc-option.mdc-list-item--selected, .mat-mdc-option:hover, .mat-mdc-menu-item:hover) { background: var(--cs-soft) !important; }
 
-/* 对话正文排版 (Claude 风格居中与衬线体，宽度支持自由调节) */
+/* 对话正文排版 (滚动容器铺满全宽以便滚动条贴最右侧且左右留白原生可滚，正文内容内部居中并支持自由调宽) */
 html[data-claude-studio] .chat-view-container:not(.zero-state) {
+  max-width: none !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  padding-inline: 0 !important;
+  box-sizing: border-box !important;
+}
+html[data-claude-studio] .chat-view-container:not(.zero-state) ms-autoscroll-container {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+  padding-inline: 20px !important;
+}
+html[data-claude-studio] .chat-view-container:not(.zero-state) .chat-session-content {
+  --ms-chat-session-content-max-width: var(--cs-chat-width, 960px);
   max-width: var(--cs-chat-width, 960px) !important;
-  width: 100%;
+  width: 100% !important;
   margin-inline: auto !important;
   box-sizing: border-box !important;
   padding-inline: 16px !important;
 }
+/* 将 AI Studio 自带的右侧滑动条/对话定位轨贴靠到主对话区最右侧边缘 */
+html[data-claude-studio] .chat-view-container:not(.zero-state) ms-chat-session > ms-items-scrollbar {
+  right: 0 !important;
+}
 /* Keep horizontal scrolling inside wide content, not on the conversation column. */
-html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) {
+html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side),
+html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) ms-autoscroll-container {
   overflow-x: hidden !important;
+}
+html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) ms-autoscroll-container {
+  overflow-y: auto !important;
 }
 html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) :is(ms-code-block pre, ms-cmark-node .table-container) {
   box-sizing: border-box;
   max-width: 100%;
   overflow-x: auto;
 }
-html[data-claude-studio] .chunk-editor-main > footer { max-width: var(--cs-chat-width, 960px) !important; width: calc(100% - 48px) !important; margin-inline: auto !important; padding-bottom: 18px !important; }
+/* 对话态底栏容器保持全宽以支持两侧留白滚轮转发，输入框本身按 --cs-chat-width 居中 */
+html[data-claude-studio]:not([data-cs-home]) .chunk-editor-main > footer {
+  max-width: none !important;
+  width: 100% !important;
+  margin-inline: 0 !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  padding-bottom: 18px !important;
+}
+html[data-claude-studio]:not([data-cs-home]) .chunk-editor-main > footer > ms-prompt-box {
+  max-width: var(--cs-chat-width, 960px) !important;
+  width: calc(100% - 48px) !important;
+  margin-inline: auto !important;
+  box-sizing: border-box !important;
+}
 html[data-claude-studio] :is(ms-text-chunk, .markdown) { color: var(--cs-text) !important; font: 16px/1.5 var(--cs-reading) !important; }
 html[data-claude-studio] ms-cmark-node { color: inherit !important; font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; }
 html[data-claude-studio] :is(ms-cmark-node, .markdown) :is(p, ul, ol, li, blockquote, th, td) { font-family: inherit !important; font-size: inherit !important; line-height: inherit !important; }
@@ -320,6 +356,7 @@ html[data-claude-studio][data-cs-home] .chunk-editor-main > footer {
   flex: 0 0 auto !important;
   position: relative !important;
   bottom: auto !important;
+  width: calc(100% - 48px) !important;
   max-width: min(calc(var(--cs-chat-width, 960px) - 40px), 1100px) !important;
   margin: 0 auto !important;
   padding: 0 !important;
@@ -1974,6 +2011,74 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
         }
     }
 
+    // ==================== 边缘区域滚轮转发（右侧滚动条轨 & 底部输入框两侧留白） ====================
+    function canElementScrollY(el, deltaY) {
+        if (!el || el === document.body || el === document.documentElement) return false;
+        const computed = window.getComputedStyle(el);
+        if (!/(auto|scroll|overlay)/.test(computed.overflowY)) return false;
+        if (el.scrollHeight <= el.clientHeight + 1) return false;
+        if (deltaY < 0) return el.scrollTop > 0;
+        if (deltaY > 0) return el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+        return true;
+    }
+
+    function findTargetChatScroller(event, originEl) {
+        const view = originEl.closest('.chat-view-container:not(.zero-state)');
+        if (view) {
+            return view.querySelector('ms-autoscroll-container');
+        }
+        const main = originEl.closest('.chunk-editor-main');
+        if (!main) return null;
+        const scrollers = [...main.querySelectorAll('.chat-view-container:not(.zero-state) ms-autoscroll-container')];
+        if (scrollers.length === 1) return scrollers[0];
+        if (scrollers.length > 1) {
+            return scrollers.find(el => {
+                const rect = el.getBoundingClientRect();
+                return event.clientX >= rect.left && event.clientX <= rect.right;
+            }) || scrollers[0];
+        }
+        return null;
+    }
+
+    function handleEdgeWheel(event) {
+        if (!enabled || event.defaultPrevented || event.ctrlKey || !event.deltaY) return;
+        if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+        if (document.documentElement?.hasAttribute('data-cs-home')) return;
+
+        const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+        if (!target) return;
+        // 避免干扰输入框内多行草稿滚动、设置面板及下拉/弹窗组件
+        if (target.closest('ms-prompt-box, textarea, input, select, #claude-studio-settings-panel, .cdk-overlay-container')) return;
+
+        const host = event.currentTarget;
+        // 若滚动条轨自身在当前方向上还可滚动（如超长多轮对话列表），优先保留原生滚动
+        if (host instanceof Element && canElementScrollY(host, event.deltaY)) return;
+
+        const scroller = findTargetChatScroller(event, host instanceof Element ? host : target);
+        if (!scroller || scroller.scrollHeight <= scroller.clientHeight + 1) return;
+
+        let dy = event.deltaY;
+        if (event.deltaMode === 1) dy *= 32;
+        else if (event.deltaMode === 2) dy *= scroller.clientHeight;
+
+        const before = scroller.scrollTop;
+        scroller.scrollTop += dy;
+        if (scroller.scrollTop !== before) {
+            event.preventDefault();
+        }
+    }
+
+    function bindScrollEdgeForwarding() {
+        const targets = document.querySelectorAll(
+            '.chunk-editor-main > footer, .chat-view-container:not(.zero-state) ms-chat-session > ms-items-scrollbar'
+        );
+        for (const el of targets) {
+            if (el.dataset.csWheelBound === '1') continue;
+            el.dataset.csWheelBound = '1';
+            el.addEventListener('wheel', handleEdgeWheel, { passive: false });
+        }
+    }
+
     let style;
     let frame;
     function update() {
@@ -2026,6 +2131,7 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
 
         const prompt = document.querySelector('ms-prompt-box');
         if (prompt) enhanceComposer(prompt);
+        bindScrollEdgeForwarding();
     }
 
     function requestUpdate() {
