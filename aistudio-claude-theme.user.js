@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Google AI Studio — Claude 暖纸与暗黑双主题
 // @namespace    local.aistudio.claude-theme
-// @version      2.0.8
-// @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、右侧贴边滑动条与全宽左右留白可滚、自动同步原生主题设置、可自定义启动默认主题。
+// @version      2.1.0
+// @description  Claude 风格暖纸与暗黑双主题、View Transition 真正渐进扩散动画（可调速 0.1x~2.0x）、居中极简首页、右侧贴边滑动条与全宽左右留白可滚、安卓手机端触控与小屏布局适配、自动同步原生主题设置、可自定义启动默认主题。
 // @match        https://aistudio.google.com/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_getValue
@@ -25,20 +25,41 @@
     const KEY_CHAT_WIDTH = 'claude_studio_chat_width';
     const BASE_DURATION = 520; // 1.0x 基准时长 520ms
 
+    // 兼容桌面与安卓各类油猴/轻量脚本管理器（GM_getValue 不可用或抛错时自动回退 localStorage）
+    function readPref(key, fallback) {
+        try {
+            if (typeof GM_getValue === 'function') {
+                const v = GM_getValue(key, undefined);
+                if (v !== undefined && v !== null) return v;
+            }
+        } catch (_) {}
+        try {
+            const raw = window.localStorage.getItem(key);
+            if (raw !== null) return raw;
+        } catch (_) {}
+        return fallback;
+    }
+
+    function writePref(key, value) {
+        try {
+            if (typeof GM_setValue === 'function') {
+                GM_setValue(key, value);
+            }
+        } catch (_) {}
+        try {
+            window.localStorage.setItem(key, String(value));
+        } catch (_) {}
+    }
+
     // 读取启动默认主题（用户设定为准，新标签页或刷新统一生效）
-    let configuredDefault = (typeof GM_getValue === 'function')
-        ? GM_getValue(KEY_DEFAULT_THEME, 'dark')
-        : 'dark';
+    let configuredDefault = readPref(KEY_DEFAULT_THEME, 'dark');
+    if (!['dark', 'light'].includes(configuredDefault)) configuredDefault = 'dark';
 
     let currentTheme = configuredDefault;
 
-    let animSpeed = (typeof GM_getValue === 'function')
-        ? Number(GM_getValue(KEY_ANIM_SPEED, 1.0)) || 1.0
-        : 1.0;
+    let animSpeed = Number(readPref(KEY_ANIM_SPEED, 1.0)) || 1.0;
 
-    let chatWidth = (typeof GM_getValue === 'function')
-        ? GM_getValue(KEY_CHAT_WIDTH, '960px')
-        : '960px';
+    let chatWidth = String(readPref(KEY_CHAT_WIDTH, '960px') || '960px');
 
     let enabled = true;
     let isThemeTransitioning = false;
@@ -368,6 +389,7 @@ html[data-claude-studio][data-cs-home] ms-chat-bottom-overlay { background: tran
 #claude-studio-welcome { display: none; }
 html[data-claude-studio][data-cs-home] #claude-studio-welcome {
   display: flex !important;
+  width: 100% !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 13px !important;
@@ -1035,6 +1057,165 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ==================== 安卓 / 移动端触控与小屏布局适配 ==================== */
+#claude-studio-theme-toggle {
+  touch-action: manipulation !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+#claude-studio-theme-toggle.cs-pressing {
+  transform: scale(0.88) !important;
+  background: var(--cs-soft, rgba(0, 0, 0, 0.08)) !important;
+}
+html[data-claude-studio] .chat-view-container:not(.zero-state) ms-autoscroll-container,
+html[data-claude-studio] .chat-view-container:not(.zero-state, .side-by-side) :is(ms-code-block pre, ms-cmark-node .table-container),
+html[data-claude-studio] .katex-display,
+#claude-studio-settings-panel {
+  -webkit-overflow-scrolling: touch;
+}
+#claude-studio-settings-panel {
+  max-height: calc(100dvh - 80px - env(safe-area-inset-bottom, 0px)) !important;
+  overscroll-behavior: contain !important;
+}
+
+@media (max-width: 768px) {
+  /* 1. 防止顶部工具栏被挤压换行（修复移动端标题与 token 数竖排挤成乱码） */
+  html[data-claude-studio] :is(ms-playground-toolbar, ms-header) {
+    min-height: 52px !important;
+  }
+  html[data-claude-studio] :is(ms-playground-toolbar, ms-header) .toolbar-left {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    gap: 4px !important;
+  }
+  html[data-claude-studio] :is(ms-playground-toolbar, ms-header) .toolbar-right {
+    flex: 0 0 auto !important;
+    gap: 2px !important;
+  }
+  html[data-claude-studio] :is(ms-playground-toolbar, ms-header) .title-tokencount-container {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
+  }
+  html[data-claude-studio] :is(ms-playground-toolbar, ms-header) .title-tokencount-container > *,
+  html[data-claude-studio] :is(ms-playground-toolbar, ms-header) .mode-title {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+  #claude-studio-theme-group {
+    margin: 0 1px !important;
+  }
+  #claude-studio-theme-toggle {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* 2. 释放手机端左右留白，保留纤细贴边滑动条并确保正文宽裕易读 */
+  html[data-claude-studio] .chat-view-container:not(.zero-state) ms-autoscroll-container {
+    padding-left: 8px !important;
+    padding-right: 22px !important;
+  }
+  html[data-claude-studio] .chat-view-container:not(.zero-state) .chat-session-content {
+    max-width: 100% !important;
+    padding-inline: 6px !important;
+  }
+  html[data-claude-studio] .chat-view-container:not(.zero-state) ms-chat-session > ms-items-scrollbar {
+    right: 0 !important;
+    width: 22px !important;
+  }
+  html[data-claude-studio] .chat-view-container:not(.zero-state) ms-items-scrollbar :is(.scrollbar-track, .items-scrollbar-item) {
+    width: 22px !important;
+  }
+  html[data-claude-studio] .chat-view-container:not(.zero-state) ms-items-scrollbar .items-scrollbar-item button {
+    width: 20px !important;
+    min-width: 20px !important;
+  }
+  html[data-claude-studio] .chat-turn-container.model {
+    padding: 0 4px !important;
+  }
+  html[data-claude-studio] .chat-turn-container.user.render {
+    padding-inline: 4px !important;
+  }
+  html[data-claude-studio] .chat-turn-container.user.render > .user-prompt-container {
+    max-width: 92% !important;
+    padding: 9px 13px !important;
+  }
+  html[data-claude-studio] :is(ms-cmark-node, .markdown) pre {
+    padding: 12px !important;
+  }
+
+  /* 3. 手机端底部胶囊输入框、虚拟键盘高度与安全区适配 */
+  html[data-claude-studio]:not([data-cs-home]) .chunk-editor-main > footer {
+    padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  html[data-claude-studio]:not([data-cs-home]) .chunk-editor-main > footer > ms-prompt-box {
+    width: calc(100% - 20px) !important;
+    max-width: 100% !important;
+  }
+  html[data-claude-studio]:not([data-cs-home]) ms-prompt-box textarea {
+    max-height: 26dvh !important;
+  }
+  html[data-claude-studio]:not([data-cs-home]) ms-prompt-box .button-row-left {
+    left: 6px !important;
+    width: calc(100% - 148px) !important;
+  }
+  html[data-claude-studio]:not([data-cs-home]) #claude-studio-model {
+    max-width: 138px !important;
+    font-size: 11.5px !important;
+    padding: 4px 5px !important;
+  }
+  html[data-claude-studio] ms-prompt-box ms-run-button button[data-cs-send] {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+  }
+
+  /* 4. 手机端居中极简首页适配 */
+  html[data-claude-studio][data-cs-home] .chunk-editor-main {
+    padding-bottom: calc(8vh + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  html[data-claude-studio][data-cs-home] .chat-container {
+    padding: 0 14px !important;
+  }
+  html[data-claude-studio][data-cs-home] .chunk-editor-main > footer {
+    width: calc(100% - 24px) !important;
+    max-width: 100% !important;
+  }
+  html[data-claude-studio][data-cs-home] #claude-studio-welcome {
+    gap: 8px !important;
+    padding: 0 0 20px !important;
+  }
+  #claude-studio-welcome .cs-sun {
+    font-size: clamp(28px, 8vw, 48px) !important;
+  }
+  #claude-studio-welcome h2 {
+    font-size: clamp(22px, 6.2vw, 34px) !important;
+    text-align: center !important;
+  }
+  html[data-claude-studio] #claude-studio-starters button {
+    padding: 8px 11px !important;
+  }
+
+  /* 5. 手机端设置面板与 Toast 轻提示 */
+  .cs-c-sqbtn {
+    width: 34px !important;
+    height: 34px !important;
+  }
+  .cs-c-seg button {
+    min-height: 34px !important;
+    padding: 6px 12px !important;
+  }
+  #claude-theme-toast {
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px)) !important;
+    max-width: calc(100vw - 28px) !important;
+    text-align: center !important;
+  }
+}
 `;
 
     function showToast(message) {
@@ -1063,9 +1244,7 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
     function setChatWidth(width) {
         if (!width) return;
         chatWidth = width;
-        if (typeof GM_setValue === 'function') {
-            GM_setValue(KEY_CHAT_WIDTH, width);
-        }
+        writePref(KEY_CHAT_WIDTH, width);
         applyChatWidth();
         updateSettingsPanelUi();
         const desc = width === '760px' ? '紧凑原版' : (width === '960px' ? '舒适宽屏' : (width === '1120px' ? '超宽代码' : '100% 满屏'));
@@ -1136,10 +1315,8 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
         if (!['dark', 'light'].includes(theme)) return;
         configuredDefault = theme;
         currentTheme = theme;
-        if (typeof GM_setValue === 'function') {
-            GM_setValue(KEY_DEFAULT_THEME, theme);
-            GM_setValue(KEY_THEME, theme);
-        }
+        writePref(KEY_DEFAULT_THEME, theme);
+        writePref(KEY_THEME, theme);
         applyThemeClasses();
         createOrUpdateToggleBtn();
         syncNativeGoogleTheme(theme);
@@ -1175,19 +1352,68 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
             group.appendChild(btn);
         }
 
-        // 手势分流绑定：左键切主题（Alt+左键唤出设置），右键唤出设置，快捷键 Alt+C
+        // 手势分流绑定：轻点/左键切主题，右键 / Alt+左键 / 移动端长按唤出设置，快捷键 Alt+C
         if (!btn.hasAttribute('data-cs-bound')) {
             btn.setAttribute('data-cs-bound', '1');
+            let pressTimer = null;
+            let pressStart = null;
+            let suppressNextClick = false;
+            let longPressHandledAt = 0;
 
-            // 1. 右键单击直接唤起或关闭设置面板，阻止原生浏览器右键菜单
+            const cancelLongPress = () => {
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+                pressStart = null;
+                btn.classList.remove('cs-pressing');
+            };
+
+            // 1. 触控端长按（420ms）唤起或关闭设置面板，兼容安卓手机无鼠标右键的场景
+            btn.addEventListener('pointerdown', (e) => {
+                if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+                cancelLongPress();
+                pressStart = { x: e.clientX, y: e.clientY };
+                btn.classList.add('cs-pressing');
+                pressTimer = setTimeout(() => {
+                    pressTimer = null;
+                    btn.classList.remove('cs-pressing');
+                    suppressNextClick = true;
+                    longPressHandledAt = Date.now();
+                    try { navigator.vibrate?.(15); } catch (_) {}
+                    toggleSettingsPanel();
+                }, 420);
+            }, { passive: true });
+
+            btn.addEventListener('pointermove', (e) => {
+                if (!pressStart || !pressTimer) return;
+                if (Math.hypot(e.clientX - pressStart.x, e.clientY - pressStart.y) > 10) {
+                    cancelLongPress();
+                }
+            }, { passive: true });
+
+            btn.addEventListener('pointerup', cancelLongPress, { passive: true });
+            btn.addEventListener('pointercancel', cancelLongPress, { passive: true });
+
+            // 2. 右键单击直接唤起或关闭设置面板，阻止原生浏览器右键菜单
             btn.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                // 避免移动端长按同时触发 pointer 定时器与 contextmenu 导致面板闪开闪关
+                if (Date.now() - longPressHandledAt < 700) return;
+                cancelLongPress();
+                suppressNextClick = true;
                 toggleSettingsPanel();
             });
 
-            // 2. 左键单击：若按住 Alt 键直接打开设置面板，否则执行顺畅的主题切换扩散动画
+            // 3. 左键/轻点：若按住 Alt 键直接打开设置面板，否则执行顺畅的主题切换扩散动画
             btn.addEventListener('click', (event) => {
+                if (suppressNextClick) {
+                    suppressNextClick = false;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                }
                 if (event.altKey) {
                     event.preventDefault();
                     event.stopPropagation();
@@ -1199,11 +1425,11 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
         }
 
         const isDark = currentTheme === 'dark';
-        btn.setAttribute('aria-label', isDark ? '切换到暖纸浅色主题' : '切换到 Claude 暗黑主题');
+        btn.setAttribute('aria-label', isDark ? '切换到暖纸浅色主题（长按打开偏好设置）' : '切换到 Claude 暗黑主题（长按打开偏好设置）');
         btn.setAttribute('aria-pressed', String(isDark));
         btn.title = isDark
-            ? '当前：Claude 暗黑模式\n• 左键点击：切换到暖纸浅色\n• 右键点击 / Alt+点击：打开偏好设置\n• 快捷键：Alt+C'
-            : '当前：暖纸浅色模式\n• 左键点击：切换到 Claude 暗黑\n• 右键点击 / Alt+点击：打开偏好设置\n• 快捷键：Alt+C';
+            ? '当前：Claude 暗黑模式\n• 轻点 / 左键点击：切换到暖纸浅色\n• 长按 / 右键点击 / Alt+点击：打开偏好设置\n• 快捷键：Alt+C'
+            : '当前：暖纸浅色模式\n• 轻点 / 左键点击：切换到 Claude 暗黑\n• 长按 / 右键点击 / Alt+点击：打开偏好设置\n• 快捷键：Alt+C';
 
         if (btn.dataset.themeIcon !== currentTheme || !btn.querySelector('svg')) {
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -1322,9 +1548,7 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
 
         const performUpdate = () => {
             currentTheme = nextTheme;
-            if (typeof GM_setValue === 'function') {
-                GM_setValue(KEY_THEME, nextTheme);
-            }
+            writePref(KEY_THEME, nextTheme);
             applyThemeClasses();
             createOrUpdateToggleBtn();
             syncNativeGoogleTheme(nextTheme);
@@ -1357,6 +1581,10 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
                 performUpdate();
             });
             activeThemeTransition = transition;
+            const safetyTimer = setTimeout(() => {
+                isThemeTransitioning = false;
+                activeThemeTransition = null;
+            }, duration + 600);
 
             transition.ready.then(() => {
                 const anim = document.documentElement.animate([
@@ -1369,6 +1597,7 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
                 });
 
                 const done = () => {
+                    clearTimeout(safetyTimer);
                     isThemeTransitioning = false;
                     activeThemeTransition = null;
                 };
@@ -1377,6 +1606,7 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
                 anim.oncancel = done;
                 transition.finished.then(done).catch(done);
             }).catch(() => {
+                clearTimeout(safetyTimer);
                 isThemeTransitioning = false;
                 activeThemeTransition = null;
             });
@@ -1446,8 +1676,22 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
 
         const anchor = document.getElementById('claude-studio-theme-group') || document.getElementById('claude-studio-theme-toggle');
         const vw = window.innerWidth;
-        const vh = window.innerHeight;
+        const vh = window.visualViewport?.height || window.innerHeight;
         const panelWidth = Math.min(390, vw - 24);
+
+        // 手机端窄屏居中展开，避免贴偏或溢出屏幕
+        if (vw <= 640) {
+            const top = anchor?.getBoundingClientRect
+                ? Math.min(Math.max(54, Math.round(anchor.getBoundingClientRect().bottom + 8)), Math.max(54, Math.round(vh - 220)))
+                : 58;
+            const side = Math.max(12, Math.round((vw - panelWidth) / 2));
+            panel.style.setProperty('left', `${side}px`, 'important');
+            panel.style.setProperty('right', `${side}px`, 'important');
+            panel.style.setProperty('top', `${top}px`, 'important');
+            panel.style.setProperty('bottom', 'auto', 'important');
+            panel.style.setProperty('width', `${panelWidth}px`, 'important');
+            return;
+        }
 
         if (anchor && anchor.getBoundingClientRect) {
             const rect = anchor.getBoundingClientRect();
@@ -1488,9 +1732,7 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
     function setAnimSpeed(speed) {
         speed = Math.min(2.0, Math.max(0.1, Math.round(Number(speed) * 10) / 10));
         animSpeed = speed;
-        if (typeof GM_setValue === 'function') {
-            GM_setValue(KEY_ANIM_SPEED, speed);
-        }
+        writePref(KEY_ANIM_SPEED, speed);
         const ms = Math.round(BASE_DURATION / speed);
         const root = document.documentElement;
         if (root) {
@@ -1857,8 +2099,11 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
         }
     }
 
-    // 窗口尺寸或滚动变动时实时重新吸附位置
+    // 窗口尺寸、移动端软键盘视口或滚动变动时实时重新吸附位置
     window.addEventListener('resize', () => {
+        if (isPanelOpen()) positionSettingsPanel();
+    }, { passive: true });
+    window.visualViewport?.addEventListener('resize', () => {
         if (isPanelOpen()) positionSettingsPanel();
     }, { passive: true });
     window.addEventListener('scroll', () => {
@@ -2085,10 +2330,12 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
         const root = document.documentElement;
         if (!root) return;
         if (!style) {
-            style = document.createElement('style');
+            style = document.getElementById('claude-studio-theme') || document.createElement('style');
             style.id = 'claude-studio-theme';
             style.textContent = css;
-            root.appendChild(style);
+        }
+        if (!style.isConnected) {
+            (document.head || root).appendChild(style);
         }
 
         applyThemeClasses();
@@ -2141,6 +2388,9 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
 
     new MutationObserver(requestUpdate).observe(document, { childList: true, subtree: true });
     document.addEventListener('input', requestUpdate, true);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', requestUpdate, { once: true });
+    }
     update();
 
     // ==================== 全局 API 穿透与控制台助手 ====================
@@ -2165,19 +2415,21 @@ html[data-cs-theme="dark"] .cs-c-ghostbtn:hover {
         }
     } catch (_) {}
 
-    // 注册油猴原生菜单命令（多通道兜底）
+    // 注册油猴原生菜单命令（多通道兜底，安全兼容移动端脚本管理器）
     if (typeof GM_registerMenuCommand === 'function') {
-        GM_registerMenuCommand('⚙️ Claude 偏好设置 (调速 / 宽度 / 启动主题)...', () => {
-            openSettingsPanel();
-        });
-        GM_registerMenuCommand('🌓 快速切换主题 (暖纸 / 暗黑)', () => toggleThemeWithAnimation());
-        GM_registerMenuCommand('👁️ 启用/停用 Claude 界面风格', () => {
-            enabled = !enabled;
-            update();
-        });
+        try {
+            GM_registerMenuCommand('⚙️ Claude 偏好设置 (调速 / 宽度 / 启动主题)...', () => {
+                openSettingsPanel();
+            });
+            GM_registerMenuCommand('🌓 快速切换主题 (暖纸 / 暗黑)', () => toggleThemeWithAnimation());
+            GM_registerMenuCommand('👁️ 启用/停用 Claude 界面风格', () => {
+                enabled = !enabled;
+                update();
+            });
+        } catch (_) {}
     }
 
     try {
-        console.log('%c[Claude Studio Theme]%c 脚本已就绪！\n• 左键点击右上角图标：切换主题（View Transition 扩散动画）\n• 右键点击 / Alt+点击 / 双击：唤起独立设置面板\n• 键盘快捷键 Alt+C：快速切换面板开合\n• F12 控制台输入 openClaudeSettings()：随时直接打开面板', 'color: #bf6243; font-weight: bold;', 'color: inherit;');
+        console.log('%c[Claude Studio Theme]%c 脚本已就绪！\n• 轻点 / 左键点击右上角图标：切换主题（View Transition 扩散动画）\n• 手机端长按 / 桌面右键 / Alt+点击：唤起独立设置面板\n• 键盘快捷键 Alt+C：快速切换面板开合\n• F12 控制台输入 openClaudeSettings()：随时直接打开面板', 'color: #bf6243; font-weight: bold;', 'color: inherit;');
     } catch (_) {}
 })();

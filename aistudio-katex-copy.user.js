@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name         Google AI Studio - 公式复制还原 LaTeX / Markdown
 // @namespace    local.aistudio.katex-copy
-// @version      1.0.0
-// @description  在 Google AI Studio 中复制包含 KaTeX 公式的内容时，自动还原为标准 LaTeX / Markdown 公式；仅选中公式一部分时自动补全为完整公式，正文与公式混选时精准保留正文与完整公式。
+// @version      1.1.0
+// @description  在 Google AI Studio 中复制包含 KaTeX 公式的内容时，自动还原为标准 LaTeX / Markdown 公式；仅选中公式一部分时自动补全为完整公式，正文与公式混选时精准保留正文与完整公式；支持桌面双击与安卓手机触控双击复制。
 // @author       Antigravity
 // @match        https://aistudio.google.com/*
 // @icon         https://www.gstatic.com/lamda/images/favicon_v1_150160cddff7f2942da3.svg
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_setClipboard
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @run-at       document-start
@@ -101,10 +102,25 @@
 
     let settings = loadSettings();
 
-    // ==================== 轻提示（纯 DOM API，兼容 Trusted Types） ====================
+    // ==================== 移动端公式触控防误缩放样式 ====================
+    function ensureTouchStyle() {
+        const host = document.head || document.documentElement;
+        if (!host || document.getElementById('aistudio-katex-copy-style')) return;
+        const style = document.createElement('style');
+        style.id = 'aistudio-katex-copy-style';
+        style.textContent = 'ms-katex, .katex, .katex-display { touch-action: manipulation; }';
+        host.appendChild(style);
+    }
+    ensureTouchStyle();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureTouchStyle, { once: true });
+    }
+
+    // ==================== 轻提示（纯 DOM API，兼容 Trusted Types 与移动端安全区） ====================
     let toastTimer = null;
     function showToast(message, isSuccess = true) {
-        if (!settings.showToast || !document.body) return;
+        const host = document.body || document.documentElement;
+        if (!settings.showToast || !host) return;
         const id = 'aistudio-katex-copy-toast';
         let toast = document.getElementById(id);
         if (!toast) {
@@ -123,6 +139,7 @@
                 fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 boxShadow: '0 8px 24px rgba(0, 0, 0, 0.24)',
                 maxWidth: 'min(360px, calc(100vw - 32px))',
+                boxSizing: 'border-box',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -132,18 +149,30 @@
                 pointerEvents: 'none',
                 backdropFilter: 'blur(12px)'
             });
-            document.body.appendChild(toast);
+            host.appendChild(toast);
+        }
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            toast.style.left = '50%';
+            toast.style.right = 'auto';
+            toast.style.bottom = 'calc(86px + env(safe-area-inset-bottom, 0px))';
+            toast.style.transform = 'translateX(-50%) translateY(8px)';
+        } else {
+            toast.style.left = 'auto';
+            toast.style.right = '24px';
+            toast.style.bottom = '24px';
+            toast.style.transform = 'translateY(8px)';
         }
         toast.textContent = (isSuccess ? '✓ ' : 'ℹ ') + message;
         toast.style.backgroundColor = isSuccess ? 'rgba(28, 27, 24, 0.92)' : 'rgba(122, 34, 34, 0.94)';
         requestAnimationFrame(() => {
             toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
+            toast.style.transform = isMobile ? 'translateX(-50%) translateY(0)' : 'translateY(0)';
         });
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(8px)';
+            toast.style.transform = isMobile ? 'translateX(-50%) translateY(8px)' : 'translateY(8px)';
         }, 2000);
     }
 
@@ -577,17 +606,28 @@
         };
     }
 
-    // ==================== 复制事件拦截与双击公式快捷复制 ====================
+    // ==================== 复制事件拦截与桌面/手机触控双击公式快捷复制 ====================
     document.addEventListener('copy', (event) => {
         if (!settings.enabled) return;
         const selection = window.getSelection();
         const payload = buildCopyPayload(selection);
         if (!payload || !payload.text) return;
 
-        if (!event.clipboardData) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        event.clipboardData.setData('text/plain', payload.text);
+        let wrote = false;
+        if (event.clipboardData) {
+            try {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                event.clipboardData.setData('text/plain', payload.text);
+                wrote = true;
+            } catch (_) {
+                wrote = false;
+            }
+        }
+        if (!wrote) {
+            // 兜底兼容部分安卓浏览器/WebView 的剪贴板写入限制
+            writeClipboardText(payload.text);
+        }
 
         if (payload.isSingleMath) {
             showToast(`已复制公式：${payload.text.replace(/\s+/g, ' ').slice(0, 42)}`, true);
@@ -603,39 +643,149 @@
                 return true;
             } catch (_) {}
         }
+        if (typeof GM_setClipboard === 'function') {
+            try {
+                GM_setClipboard(text, 'text');
+                return true;
+            } catch (_) {}
+        }
+        const host = document.body || document.documentElement;
+        if (!host) return false;
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.setAttribute('readonly', '');
         Object.assign(ta.style, {
             position: 'fixed',
-            top: '-9999px',
-            left: '-9999px',
-            opacity: '0'
+            top: '0',
+            left: '0',
+            width: '1px',
+            height: '1px',
+            padding: '0',
+            border: '0',
+            outline: 'none',
+            fontSize: '16px',
+            opacity: '0',
+            pointerEvents: 'none'
         });
-        document.body.appendChild(ta);
+        host.appendChild(ta);
+        try {
+            ta.focus({ preventScroll: true });
+        } catch (_) {
+            try { ta.focus(); } catch (_) {}
+        }
         ta.select();
+        try {
+            ta.setSelectionRange(0, text.length);
+        } catch (_) {}
         let ok = false;
         try {
             ok = document.execCommand('copy');
         } catch (_) {
             ok = false;
         }
+        try { ta.blur(); } catch (_) {}
         ta.remove();
+        return ok;
+    }
+
+    let lastTouchCopyAt = 0;
+    async function copySingleMathRoot(mathRoot, { vibrate = false } = {}) {
+        if (!mathRoot || isEditableContext(mathRoot)) return false;
+        const formatted = formatMath(mathRoot, true);
+        if (!formatted) return false;
+
+        const ok = await writeClipboardText(formatted);
+        if (ok) {
+            if (vibrate) {
+                try { navigator.vibrate?.(12); } catch (_) {}
+            }
+            showToast(`已复制公式：${formatted.replace(/\s+/g, ' ').slice(0, 42)}`, true);
+        }
         return ok;
     }
 
     document.addEventListener('dblclick', async (event) => {
         if (!settings.enabled || !settings.dblclickCopy) return;
+        if (Date.now() - lastTouchCopyAt < 550) return;
         const mathRoot = findMathRoot(event.target);
-        if (!mathRoot || isEditableContext(mathRoot)) return;
-        const formatted = formatMath(mathRoot, true);
-        if (!formatted) return;
-
-        const ok = await writeClipboardText(formatted);
-        if (ok) {
-            showToast(`已复制公式：${formatted.replace(/\s+/g, ' ').slice(0, 42)}`, true);
-        }
+        if (!mathRoot) return;
+        await copySingleMathRoot(mathRoot);
     }, true);
+
+    // 安卓手机端触控双击公式识别器（不干扰正常滑动滚动与长按划词选区）
+    let activeTouch = null;
+    let lastTap = null;
+
+    document.addEventListener('pointerdown', (event) => {
+        if (!settings.enabled || !settings.dblclickCopy) return;
+        if (event.pointerType !== 'touch' && event.pointerType !== 'pen') return;
+        if (!event.isPrimary) {
+            activeTouch = null;
+            return;
+        }
+        const mathRoot = findMathRoot(event.target);
+        if (!mathRoot || isEditableContext(mathRoot)) {
+            activeTouch = null;
+            return;
+        }
+        activeTouch = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY,
+            time: Date.now(),
+            moved: false,
+            mathRoot
+        };
+    }, { capture: true, passive: true });
+
+    document.addEventListener('pointermove', (event) => {
+        if (!activeTouch || event.pointerId !== activeTouch.pointerId) return;
+        if (Math.hypot(event.clientX - activeTouch.x, event.clientY - activeTouch.y) > 12) {
+            activeTouch.moved = true;
+        }
+    }, { capture: true, passive: true });
+
+    document.addEventListener('pointercancel', (event) => {
+        if (activeTouch && event.pointerId === activeTouch.pointerId) {
+            activeTouch = null;
+        }
+    }, { capture: true, passive: true });
+
+    document.addEventListener('pointerup', async (event) => {
+        if (!activeTouch || event.pointerId !== activeTouch.pointerId) return;
+        const cur = activeTouch;
+        activeTouch = null;
+
+        const now = Date.now();
+        // 滑动或长按（>380ms，多为原生划词）直接放行
+        if (cur.moved || now - cur.time > 380) {
+            lastTap = null;
+            return;
+        }
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+            lastTap = null;
+            return;
+        }
+
+        if (
+            lastTap &&
+            lastTap.mathRoot === cur.mathRoot &&
+            now - lastTap.time <= 340 &&
+            Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) <= 36
+        ) {
+            lastTap = null;
+            lastTouchCopyAt = now;
+            await copySingleMathRoot(cur.mathRoot, { vibrate: true });
+        } else {
+            lastTap = {
+                mathRoot: cur.mathRoot,
+                x: event.clientX,
+                y: event.clientY,
+                time: now
+            };
+        }
+    }, { capture: true, passive: true });
 
     // ==================== 油猴菜单（动态更新状态） ====================
     let menuIds = [];
@@ -667,10 +817,10 @@
         });
 
         register(
-            settings.dblclickCopy ? '🖱️ 双击公式直接复制：已开启' : '🖱️ 双击公式直接复制：已关闭',
+            settings.dblclickCopy ? '🖱️ 双击 / 手机轻点两次公式复制：已开启' : '🖱️ 双击 / 手机轻点两次公式复制：已关闭',
             () => {
                 saveSettings({ ...settings, dblclickCopy: !settings.dblclickCopy });
-                showToast(settings.dblclickCopy ? '已开启双击公式直接复制' : '已关闭双击公式直接复制', true);
+                showToast(settings.dblclickCopy ? '已开启双击/轻点两次公式直接复制' : '已关闭双击/轻点两次公式直接复制', true);
             }
         );
 
@@ -692,4 +842,23 @@
     }
 
     refreshMenuCommands();
+
+    // 暴露轻量全局接口，方便不支持油猴扩展菜单的安卓轻量浏览器控制
+    const api = {
+        getSettings: () => ({ ...settings }),
+        setSettings: (patch) => saveSettings({ ...settings, ...(patch || {}) }),
+        cycleFormat: () => {
+            const nextIdx = (FORMAT_ORDER.indexOf(settings.format) + 1) % FORMAT_ORDER.length;
+            const nextKey = FORMAT_ORDER[nextIdx];
+            saveSettings({ ...settings, format: nextKey });
+            showToast(`公式复制格式已切为：${FORMAT_MODES[nextKey].label}`, true);
+            return nextKey;
+        }
+    };
+    try {
+        window.aistudioKatexCopy = api;
+        if (typeof unsafeWindow !== 'undefined' && unsafeWindow !== window) {
+            unsafeWindow.aistudioKatexCopy = api;
+        }
+    } catch (_) {}
 })();

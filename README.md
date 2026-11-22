@@ -8,9 +8,11 @@
 
 | 脚本 | 版本 | 安装 |
 |---|---|---|
-| Gemini 4 默认模型与思考强度自动切换、启动折叠右侧栏 | 4.0.1 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
-| Claude 暖纸与暗黑双主题 | 2.0.8 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
-| 公式复制还原 LaTeX / Markdown（独立轻量脚本） | 1.0.0 | [安装公式复制脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-katex-copy.user.js) |
+| Gemini 4 默认模型与思考强度自动切换、启动折叠右侧栏 | 4.1.0 | [安装默认设置脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-argon-defaults.user.js) |
+| Claude 暖纸与暗黑双主题 | 2.1.0 | [安装主题脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-claude-theme.user.js) |
+| 公式复制还原 LaTeX / Markdown（独立轻量脚本） | 1.1.0 | [安装公式复制脚本](https://raw.githubusercontent.com/fisherbio/aistudio-claude-userscripts/main/aistudio-katex-copy.user.js) |
+
+> **安卓手机端使用说明**：安卓原生 Chrome 不支持浏览器扩展，建议在 **Edge（安卓版）**、**Firefox（安卓版）**、**Kiwi / 狐猴（Lemur）/ Mises** 浏览器中安装 Tampermonkey / Violentmonkey，或使用 **Via / X 浏览器**等支持用户脚本的浏览器导入以上脚本。三份脚本现均已适配手机窄屏布局、触控手势与无 `GM_*` 时的 `localStorage` 回退存储。
 
 安装后刷新 [AI Studio Playground](https://aistudio.google.com/prompts/new_chat)。若链接只显示源码，可在油猴中新建脚本、粘贴完整源码并保存。Chrome 中若油猴提示脚本执行权限，请按扩展自己的引导开启。
 
@@ -51,6 +53,17 @@
 - **打开 Claude 偏好设置**：右键或 Alt+左键点击该按钮，也可用 Alt+C 或油猴菜单「Claude 偏好设置」。图钉可让面板在点击外部时保持打开；按 Esc 或点击「完成」可关闭。
 - **调整阅读体验**：动画速度可调至 **0.1×–2.0×**，对话宽度可选 **760px、960px、1120px、100%**。动画速度、宽度和启动外观会保存在本机；「恢复默认」会还原为 **1.0×、960px、暗黑**。
 - **回到原版**：在油猴管理面板停用主题脚本并刷新。主题切换也会尝试同步 AI Studio 自己的主题偏好；如果刷新后原生外观仍是暗色，可在 AI Studio 的外观设置里改回。
+
+## 2.1.0 / 4.1.0 / 1.1.0：三脚本全面适配安卓手机端
+
+- **主题脚本 (`2.1.0`)**：
+  - 新增**触控长按（约 420ms）顶栏太阳/月亮图标**打开 Claude 偏好设置面板（带轻按反馈与震动提示，不再依赖桌面右键或 `Alt+C`）；设置面板与提示条在窄屏自动居中并适配 `100dvh` 与底部安全区。
+  - 手机窄屏下优化顶栏防挤压（标题与 token 数不再竖排断行）、收窄左右留白与右侧滑动条（`22px`）以释放正文阅读宽度，并收紧底部输入框与 Zero-State 欢迎标题比例。
+  - 为 `GM_getValue / GM_setValue` 补齐 `try/catch` 与 `localStorage` 自动回退，兼容 Via、X 浏览器等安卓轻量脚本环境。
+- **默认模型脚本 (`4.1.0`)**：
+  - 手机窄屏下顶栏胶囊自动切换为超紧凑元素符号缩写（如 `Ar·H`、`Ne·XH`），不再挤压 AI Studio 原生顶栏标题；配置弹层支持居中显示、`100dvh` 内部滚动、4 档思考强度短标签与触控尺寸，启动遮罩一并隐藏移动端抽屉背景蒙层。
+- **公式复制脚本 (`1.1.0`)**：
+  - 新增安卓触控**轻点两次公式快捷复制**（通过 `touch-action: manipulation` 抑制双击放大，且自动避让滑动滚动与长按划词）；剪贴板写入升级为 `navigator.clipboard → GM_setClipboard → 移动端安全 textarea 选区` 三级兜底，Toast 提示避让底部发送按钮，并暴露 `window.aistudioKatexCopy` 供无扩展菜单的轻量浏览器调用。
 
 ## 2.0.8：滑动条贴最右缘与左右留白全宽可滚
 

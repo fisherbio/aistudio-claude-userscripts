@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Google AI Studio - Gemini 4 默认模型与思考强度自动切换
 // @namespace    https://tampermonkey.net/
-// @version      4.0.1
-// @description  打开 Google AI Studio 时，自动切换到所选 Gemini 4 模型（Neon / Hydrogen / Carbon / Argon）与对应思考强度，并可自动折叠右侧 Run settings 侧边栏
+// @version      4.1.0
+// @description  打开 Google AI Studio 时，自动切换到所选 Gemini 4 模型（Neon / Hydrogen / Carbon / Argon）与对应思考强度，并可自动折叠右侧 Run settings 侧边栏；完整适配桌面与安卓手机端布局及触控交互
 // @author       Antigravity
 // @match        https://aistudio.google.com/*
 // @icon         https://www.gstatic.com/lamda/images/favicon_v1_150160cddff7f2942da3.svg
@@ -12,6 +12,7 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @run-at       document-start
+// @noframes
 // @license      MIT
 // @homepageURL  https://github.com/fisherbio/aistudio-claude-userscripts
 // @supportURL   https://github.com/fisherbio/aistudio-claude-userscripts/issues
@@ -30,24 +31,28 @@
             key: 'low',
             label: 'Low',
             shortLabel: 'Low',
+            tinyLabel: 'L',
             match: /^(low|低)$/i
         },
         medium: {
             key: 'medium',
             label: 'Medium',
             shortLabel: 'Med',
+            tinyLabel: 'M',
             match: /^(medium|中|中等)$/i
         },
         high: {
             key: 'high',
             label: 'High',
             shortLabel: 'High',
+            tinyLabel: 'H',
             match: /^(high|高)$/i
         },
         extra_high: {
             key: 'extra_high',
             label: 'Extra High',
             shortLabel: 'XHigh',
+            tinyLabel: 'XH',
             match: /^(extra\s*high|xhigh|极高|超高)$/i
         }
     };
@@ -182,10 +187,13 @@
         return THINKING_META[getActiveThinkingKey(model)] || THINKING_META.high;
     }
 
-    function formatPresetSummary(short = false) {
+    function formatPresetSummary(mode = false) {
         const model = getActiveModel();
         const thinking = getActiveThinkingMeta(model);
-        return short
+        if (mode === 'compact') {
+            return `${model.symbol}·${thinking.tinyLabel}`;
+        }
+        return mode
             ? `${model.shortName} · ${thinking.shortLabel}`
             : `${model.name} · ${thinking.label}`;
     }
@@ -223,7 +231,9 @@
                         .cdk-overlay-pane:has(ms-model-carousel[data-test-id="model-carousel-in-selector"]) *,
                         [role="listbox"][aria-label="Thinking Level"],
                         [role="listbox"][aria-label="Thinking Level"] *,
-                        .cdk-overlay-backdrop
+                        .cdk-overlay-backdrop,
+                        .mat-drawer-backdrop,
+                        .overlay-backdrop
                     ) {
                         opacity: 0 !important;
                         pointer-events: none !important;
@@ -231,6 +241,8 @@
                         transition: none !important;
                     }
                 `;
+            }
+            if (!maskStyle.isConnected) {
                 root.appendChild(maskStyle);
             }
             root.setAttribute('data-g4-initializing', '');
@@ -269,7 +281,8 @@
 
     let toastTimer = null;
     function showToast(message, isSuccess = true) {
-        if (!document.body) return;
+        const host = document.body || document.documentElement;
+        if (!host) return;
         const id = 'aistudio-g4-toast';
         let toast = document.getElementById(id);
         if (!toast) {
@@ -290,24 +303,38 @@
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                maxWidth: 'min(380px, calc(100vw - 24px))',
+                boxSizing: 'border-box',
                 transition: 'opacity 0.22s ease, transform 0.22s ease',
                 opacity: '0',
                 transform: 'translateY(10px)',
                 pointerEvents: 'none',
                 backdropFilter: 'blur(12px)'
             });
-            document.body.appendChild(toast);
+            host.appendChild(toast);
+        }
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            toast.style.left = '50%';
+            toast.style.right = 'auto';
+            toast.style.bottom = 'calc(86px + env(safe-area-inset-bottom, 0px))';
+            toast.style.transform = 'translateX(-50%) translateY(10px)';
+        } else {
+            toast.style.left = 'auto';
+            toast.style.right = '24px';
+            toast.style.bottom = '24px';
+            toast.style.transform = 'translateY(10px)';
         }
         toast.textContent = (isSuccess ? '✓ ' : 'ℹ ') + message;
         toast.style.backgroundColor = isSuccess ? 'rgba(28, 27, 24, 0.94)' : 'rgba(122, 34, 34, 0.95)';
         requestAnimationFrame(() => {
             toast.style.opacity = '1';
-            toast.style.transform = 'translateY(0)';
+            toast.style.transform = isMobile ? 'translateX(-50%) translateY(0)' : 'translateY(0)';
         });
         clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
             toast.style.opacity = '0';
-            toast.style.transform = 'translateY(10px)';
+            toast.style.transform = isMobile ? 'translateX(-50%) translateY(10px)' : 'translateY(10px)';
         }, 3400);
     }
 
@@ -503,8 +530,11 @@
         if (!button) return;
         button.click();
         await waitFor(() => !isPanelOpen(), token, 'Run settings 未能折叠');
-        // 等离场动画真正销毁面板后再解开遮罩，避免最后一帧闪现。
-        await waitFor(() => !document.querySelector('ms-run-settings'), token, 'Run settings 离场尚未完成');
+        // 等离场动画销毁或彻底隐藏面板后再解开遮罩，兼容移动端抽屉驻留 DOM 场景
+        await waitFor(() => {
+            const rs = document.querySelector('ms-run-settings');
+            return !rs || !visible(rs);
+        }, token, 'Run settings 离场尚未完成');
     }
 
     async function executeFlow(token, { manual = false } = {}) {
@@ -591,13 +621,12 @@
     }
 
     // ==================== 优雅内嵌配置面板（无 innerHTML，兼容 Trusted Types） ====================
-    let uiStyleInjected = false;
     let isPopoverOpen = false;
     let statusEl = null;
 
     function injectUiStyles() {
-        if (uiStyleInjected || !document.head) return;
-        uiStyleInjected = true;
+        const host = document.head || document.documentElement;
+        if (!host || document.getElementById('aistudio-g4-ui-style')) return;
         const style = document.createElement('style');
         style.id = 'aistudio-g4-ui-style';
         style.textContent = String.raw`
@@ -694,7 +723,11 @@
                 backdrop-filter: blur(22px) saturate(150%) !important;
                 -webkit-backdrop-filter: blur(22px) saturate(150%) !important;
                 font-family: var(--cs-ui, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif) !important;
-                overflow: hidden !important;
+                max-height: calc(100dvh - 76px - env(safe-area-inset-bottom, 0px)) !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                overscroll-behavior: contain !important;
                 text-align: left !important;
             }
             html[data-claude-studio] #aistudio-g4-popover {
@@ -981,8 +1014,57 @@
                 text-align: center !important;
                 margin-top: -4px !important;
             }
+
+            /* 安卓 / 移动端紧凑顶栏胶囊与触控面板适配 */
+            #aistudio-g4-trigger {
+                touch-action: manipulation !important;
+                -webkit-tap-highlight-color: transparent !important;
+            }
+            @media (max-width: 640px) {
+                #aistudio-g4-trigger {
+                    height: 28px !important;
+                    padding: 0 7px !important;
+                    margin: 0 2px !important;
+                    gap: 4px !important;
+                    font-size: 11.5px !important;
+                    border-radius: 8px !important;
+                }
+                .g4-close {
+                    width: 32px !important;
+                    height: 32px !important;
+                }
+                .g4-thinking-pill {
+                    height: 36px !important;
+                    font-size: 11.5px !important;
+                    padding: 0 4px !important;
+                }
+                .g4-toggle-row {
+                    min-height: 36px !important;
+                    font-size: 12.5px !important;
+                }
+                .g4-apply-btn {
+                    height: 40px !important;
+                    font-size: 13px !important;
+                }
+            }
+            @media (max-width: 380px) {
+                .g4-body {
+                    padding: 10px 11px 12px !important;
+                }
+                .g4-model-grid {
+                    gap: 6px !important;
+                }
+                .g4-model-card {
+                    padding: 8px !important;
+                    gap: 6px !important;
+                }
+                .g4-elem-box {
+                    width: 26px !important;
+                    height: 26px !important;
+                }
+            }
         `;
-        document.head.appendChild(style);
+        host.appendChild(style);
     }
 
     function ensureTriggerButton() {
@@ -1050,8 +1132,9 @@
         const btn = ensureTriggerButton();
         if (!btn) return;
         const textSpan = btn.querySelector('.g4-trigger-text');
-        const summary = formatPresetSummary(true);
-        const nextText = settings.autoSwitch ? summary : `${summary} (暂停)`;
+        const isCompact = window.innerWidth <= 640;
+        const summary = formatPresetSummary(isCompact ? 'compact' : true);
+        const nextText = settings.autoSwitch ? summary : (isCompact ? `${summary}·停` : `${summary} (暂停)`);
         if (textSpan && textSpan.textContent !== nextText) {
             textSpan.textContent = nextText;
         }
@@ -1083,6 +1166,23 @@
 
     function positionPopover(pop) {
         const trigger = document.getElementById('aistudio-g4-trigger');
+        const vw = window.innerWidth;
+        const vh = window.visualViewport?.height || window.innerHeight;
+        const popWidth = Math.min(358, vw - 24);
+
+        // 手机端居中定位，避免偏右溢出或顶栏遮挡
+        if (vw <= 640) {
+            const top = (trigger && visible(trigger))
+                ? Math.min(Math.max(52, Math.round(trigger.getBoundingClientRect().bottom + 8)), Math.max(52, Math.round(vh - 200)))
+                : 56;
+            const side = Math.max(12, Math.round((vw - popWidth) / 2));
+            pop.style.setProperty('top', `${top}px`, 'important');
+            pop.style.setProperty('left', `${side}px`, 'important');
+            pop.style.setProperty('right', `${side}px`, 'important');
+            pop.style.setProperty('width', `${popWidth}px`, 'important');
+            return;
+        }
+
         if (!trigger || !visible(trigger)) {
             pop.style.setProperty('top', '58px', 'important');
             pop.style.setProperty('right', '16px', 'important');
@@ -1090,10 +1190,9 @@
             return;
         }
         const rect = trigger.getBoundingClientRect();
-        const popWidth = Math.min(358, window.innerWidth - 24);
-        const top = Math.min(window.innerHeight - 120, Math.round(rect.bottom + 8));
-        const maxRight = Math.max(12, window.innerWidth - popWidth - 12);
-        const right = Math.min(maxRight, Math.max(16, Math.round(window.innerWidth - rect.right)));
+        const top = Math.min(vh - 120, Math.round(rect.bottom + 8));
+        const maxRight = Math.max(12, vw - popWidth - 12);
+        const right = Math.min(maxRight, Math.max(16, Math.round(vw - rect.right)));
         pop.style.setProperty('top', `${top}px`, 'important');
         pop.style.setProperty('right', `${right}px`, 'important');
         pop.style.setProperty('left', 'auto', 'important');
@@ -1219,6 +1318,7 @@
         thinkRow.className = 'g4-thinking-row';
         thinkRow.style.gridTemplateColumns = `repeat(${activeModel.thinkingLevels.length}, minmax(0, 1fr))`;
 
+        const useShortThinkingLabel = window.innerWidth <= 420 && activeModel.thinkingLevels.length >= 4;
         for (const lvlKey of activeModel.thinkingLevels) {
             const lvlMeta = THINKING_META[lvlKey];
             const pill = document.createElement('button');
@@ -1226,7 +1326,7 @@
             pill.className = 'g4-thinking-pill';
             pill.dataset.level = lvlKey;
             pill.dataset.active = lvlKey === activeThinkingKey ? '1' : '0';
-            pill.textContent = lvlMeta.label;
+            pill.textContent = useShortThinkingLabel ? lvlMeta.shortLabel : lvlMeta.label;
             pill.addEventListener('click', () => {
                 saveSettings({
                     ...settings,
@@ -1326,11 +1426,22 @@
         }
     }, true);
 
-    window.addEventListener('resize', () => {
+    const handleViewportChange = () => {
+        if (document.body) updateToolbarTrigger();
+        if (!isPopoverOpen) return;
+        const pop = document.getElementById('aistudio-g4-popover');
+        if (pop) {
+            renderPopoverContent();
+            positionPopover(pop);
+        }
+    };
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    window.addEventListener('orientationchange', handleViewportChange, { passive: true });
+    window.visualViewport?.addEventListener('resize', () => {
         if (!isPopoverOpen) return;
         const pop = document.getElementById('aistudio-g4-popover');
         if (pop) positionPopover(pop);
-    });
+    }, { passive: true });
 
     // ==================== 跨标签页配置同步 ====================
     if (typeof GM_addValueChangeListener === 'function') {
